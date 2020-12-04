@@ -16,17 +16,17 @@ class Circle(Body):
     def radius(self):
         return self._parameters["radius"]
 
-    def create_physics(self, engine):
+    def create_physics(self):
         shape = pymunk.Circle(self._create_body(), radius=self.radius)
         shape.density = self.density
 
         self._shapes.append(shape)
-        engine.space.add(self._body, shape)
+        self.engine.space.add(self._body, shape)
 
-    def create_graphics(self, engine):
-        batch = engine.renderer.get_permanent_batch("sprites")
+    def create_graphics(self):
+        batch = self.engine.renderer.get_permanent_batch("sprites")
 
-        image = engine.images.centered_image("player1")
+        image = self.engine.images.centered_image("player1")
         sprite = pyglet.sprite.Sprite(image, batch=batch, subpixel=True)
         sprite.scale = self.radius * 2. / sprite.width
         self._graphics.append(sprite)
@@ -47,17 +47,17 @@ class Box(Body):
     def extent(self):
         return self._parameters["extent"]
 
-    def create_physics(self, engine):
+    def create_physics(self):
         shape = pymunk.Poly.create_box(self._create_body(), self.extent * 2)
         shape.density = self.density
 
         self._shapes.append(shape)
-        engine.space.add(self._body, shape)
+        self.engine.space.add(self._body, shape)
 
-    def create_graphics(self, engine):
-        batch = engine.renderer.get_permanent_batch("sprites")
+    def create_graphics(self):
+        batch = self.engine.renderer.get_permanent_batch("sprites")
 
-        image = engine.images.centered_image("box1")
+        image = self.engine.images.centered_image("box1")
         sprite = pyglet.sprite.Sprite(image, batch=batch, subpixel=True)
         sprite.scale = 1. / sprite.width
         sprite.scale_x *= self.extent[0] * 2
