@@ -71,9 +71,16 @@ class Renderer:
         vertices = tuple(vertices)
         num_vertices = len(vertices)
         indices = []
-        for i in range(num_vertices):
-            indices.append(i)
-            indices.append((i + 1) % len(vertices))
+        if num_vertices == 2:
+            return batch.add(
+                len(vertices), gl.GL_LINES, None,
+                ("v2f", (vertices[0][0], vertices[0][1], vertices[1][0], vertices[1][1])),
+            )
+        else:
+            for i in range(num_vertices):
+                indices.append(i)
+                indices.append((i + 1) % len(vertices))
+
         return self.draw_lines_indexed(batch, vertices, indices)
 
     def draw_lines_indexed(self, batch, vertices, indices):
@@ -85,4 +92,4 @@ class Renderer:
             len(vertices), gl.GL_LINES, None,
             indices,
             ("v2f", flat_vertices),
-            )
+        )

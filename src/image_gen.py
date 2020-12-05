@@ -84,8 +84,13 @@ class ImageGenerator:
 
         image = RGBAImage(size)
         image.fill(color)
-        if shape == "circle":
+
+        if shape == "rect":
+            image.add_mask(image.rect_bevel_mask())
+
+        elif shape == "circle":
             image.fill_alpha(image.circle_mask())
+
         return image.to_pyglet()
 
 
@@ -115,6 +120,9 @@ class RGBAImage:
     def fill_alpha(self, a):
         self.pixels[:, :, -1:] = a
 
+    def add_mask(self, mask):
+        self.pixels += mask
+
     def circle_mask(self, center=None, radius=None):
         if radius is None:
             radius = .5
@@ -131,4 +139,17 @@ class RGBAImage:
                 step = max(0, min(1, (radius - dist) * max_size + 1))
                 mask[y][x][0] = step
 
+        return mask
+
+    def rect_bevel_mask(self, padding=.2, amount=.1):
+        mask = np.ndarray((self.size[1], self.size[0], 1), dtype=np.float)
+        for y in range(mask.shape[0]):
+            yf = y / (mask.shape[0] - 1)
+            for x in range(mask.shape[1]):
+                xf = x / (mask.shape[1] - 1)
+                value = max(0., padding - xf) + \
+                    max(0., padding - yf) + \
+                    min(0., 1. - padding - xf) + \
+                    min(0., 1. - padding - yf)
+                mask[y][x][0] = value / padding * amount
         return mask

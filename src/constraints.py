@@ -7,12 +7,18 @@ import pyglet
 from pyglet import gl
 
 from .engine_obj import EngineObject
-from .graphical import Graphical
+from .graphical import Graphical, GraphicSettings
 
 
 class Constraint(Graphical):
 
     def __init__(self, a, b, breaking_impulse=0, **parameters):
+        if "graphic_settings" not in parameters:
+            parameters["graphic_settings"] = GraphicSettings(
+                draw_lines=True, draw_sprite=False,
+                line_batch_name="constraint-lines"
+            )
+
         # TODO: how to parmeterize a and b objects?
         super().__init__(
             breaking_impulse=breaking_impulse,
@@ -50,6 +56,11 @@ class Constraint(Graphical):
         if self.breaking_impulse and true_impulse > self.breaking_impulse:
             #print(f"constraint broken {true_impulse} > {self.breaking_impulse}: {self}", self._parameters)
             self.engine.remove_constraint(self)
+
+    def iter_world_points(self):
+        if hasattr(self, "anchor_a") and hasattr(self, "anchor_b"):
+            yield self.a.position + self.anchor_a.rotated(self.a.angle)
+            yield self.b.position + self.anchor_b.rotated(self.b.angle)
 
 
 class FixedJoint(Constraint):
@@ -90,30 +101,11 @@ class FixedJoint(Constraint):
             self.a.body, self.b.body,
             anchor_a=self.anchor_a,
             anchor_b=self.anchor_b,
-            #min=0, max=1 * .3,
         )
 
         self._constraint = constraint
         self.engine.space.add(constraint)
         self._parameters["original_distance"] = self._constraint.distance
-
-    def create_graphics(self):
-        pass
-
-    def render_graphics(self):
-        batch = self.engine.renderer.get_batch("lines")
-        if not batch:
-            return
-
-        p1 = self.a.position + self.anchor_a.rotated(self.a.angle)
-        p2 = self.b.position + self.anchor_b.rotated(self.b.angle)
-        #f = (p2 - p1).normalized() * min(.3, 0.01 + self.impulse)
-        #p1 -= f
-        #p2 += f
-        batch.add(
-            2, gl.GL_LINES, None,
-            ("v2f", (p1.x, p1.y, p2.x, p2.y)),
-        )
 
 
 class PivotAnchorJoint(Constraint):
@@ -145,18 +137,6 @@ class PivotAnchorJoint(Constraint):
 
     def create_graphics(self):
         pass
-
-    def render_graphics(self):
-        batch = self.engine.renderer.get_batch("lines")
-        if not batch:
-            return
-
-        p1 = self.a.position + self.anchor_a.rotated(self.a.angle)
-        p2 = self.b.position + self.anchor_b.rotated(self.b.angle)
-        batch.add(
-            2, gl.GL_LINES, None,
-            ("v2f", (p1.x, p1.y, p2.x, p2.y)),
-        )
 
 
 class SpringJoint(Constraint):
@@ -222,24 +202,6 @@ class SpringJoint(Constraint):
         self._constraint = constraint
         self.engine.space.add(constraint)
 
-    def create_graphics(self):
-        pass
-
-    def render_graphics(self):
-        batch = self.engine.renderer.get_batch("lines")
-        if not batch:
-            return
-
-        p1 = self.a.position + self.anchor_a.rotated(self.a.angle)
-        p2 = self.b.position + self.anchor_b.rotated(self.b.angle)
-        #f = (p2 - p1).normalized() * min(.3, 0.01 + self.impulse)
-        #p1 -= f
-        #p2 += f
-        batch.add(
-            2, gl.GL_LINES, None,
-            ("v2f", (p1.x, p1.y, p2.x, p2.y)),
-        )
-
 
 class RotaryLimitJoint(Constraint):
 
@@ -268,21 +230,3 @@ class RotaryLimitJoint(Constraint):
 
         self._constraint = constraint
         self.engine.space.add(constraint)
-
-    def create_graphics(self):
-        pass
-
-    def render_graphics(self):
-        batch = self.engine.renderer.get_batch("lines")
-        if not batch:
-            return
-
-        p1 = self.a.position
-        p2 = self.b.position
-        #f = (p2 - p1).normalized() * min(.3, 0.01 + self.impulse)
-        #p1 -= f
-        #p2 += f
-        batch.add(
-            2, gl.GL_LINES, None,
-            ("v2f", (p1.x, p1.y, p2.x, p2.y)),
-        )

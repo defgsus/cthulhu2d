@@ -3,11 +3,18 @@ from pymunk import Vec2d
 
 from .primitives import Circle
 from .keyhandler import KeyHandler
-
+from .graphical import GraphicSettings
 
 class Player(Circle):
     def __init__(self, position, **parameters):
-        super().__init__(position=position, radius=.4, density=1, **parameters)
+        super().__init__(
+            position=position, radius=.4, density=1,
+            graphic_settings=GraphicSettings(
+                draw_lines=True, draw_sprite=True,
+                image_name="player1",
+            ),
+            **parameters
+        )
         self.keys = KeyHandler()
         self.pick_dir = Vec2d()
 
