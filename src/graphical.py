@@ -1,3 +1,4 @@
+import math
 import pyglet
 
 from .engine_obj import EngineObject
@@ -19,7 +20,12 @@ class Graphical(EngineObject):
         return self._parameters["graphic_settings"]
 
     def create_graphics(self):
-        pass
+        """Default implementation create a sprite if configured in graphics_settings"""
+        if self.graphic_settings.draw_sprite:
+            sprite = self.graphic_settings.create_sprite(self.engine)
+            if sprite:
+                self.on_sprite_created(sprite)
+                self._graphics.append(sprite)
 
     def destroy_graphics(self):
         for g in self._graphics:
@@ -27,21 +33,39 @@ class Graphical(EngineObject):
         self._graphics = []
 
     def update_graphics(self, dt):
-        pass
+        """
+        Default implementation updates the sprites with position and angle, if present
+        """
+        if hasattr(self, "position"):
+            if self.graphic_settings.draw_sprite and self._graphics:
+                sprite = self._graphics[0]
+                sprite.position = self.position
+                if hasattr(self, "angle"):
+                    sprite.rotation = -self.angle * 180. / math.pi
 
     def render_graphics(self):
-        pass
+        """Default function renders lines along iter_world_points(), if present"""
+        if hasattr(self, "iter_world_points"):
+            if self.graphic_settings.draw_lines:
+                batch: pyglet.graphics.Batch = self.engine.renderer.get_batch("lines")
+                if batch:
+                    self.engine.renderer.draw_lines(batch, self.iter_world_points())
 
+    def on_sprite_created(self, sprite):
+        """Called by default implementation of create_graphics() if 'draw_sprite' is enabled in graphics_settings"""
+        pass
 
 class GraphicSettings(Parameterized):
     def __init__(
             self,
-            draw_lines=False,
+            draw_lines=True,
             draw_sprite=False,
             image_name=None,
             image_alignment="center",
             image_batch_name="sprites",
     ):
+        if isinstance(image_name, ImageGeneratorSettings):
+            image_name = image_name.to_uri()
         super().__init__(
             draw_lines=draw_lines,
             draw_sprite=draw_sprite,

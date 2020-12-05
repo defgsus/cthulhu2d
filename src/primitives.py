@@ -11,12 +11,18 @@ from .body import Body
 
 class Circle(Body):
 
-    def __init__(self, position, radius, density=0):
-        super().__init__(position=position, density=density, radius=radius)
+    def __init__(self, position, radius, **parameters):
+        super().__init__(position=position, radius=radius, **parameters)
 
     @property
     def radius(self):
         return self._parameters["radius"]
+
+    def iter_points(self):
+        steps = 12
+        for i in range(steps):
+            t = i / steps * math.pi * 2
+            yield Vec2d((math.sin(t), math.cos(t))) * self.radius
 
     def create_physics(self):
         shape = pymunk.Circle(self._create_body(), radius=self.radius)
@@ -24,17 +30,8 @@ class Circle(Body):
 
         self.engine.space.add(self._body, shape)
 
-    def create_graphics(self):
-        sprite = self.graphic_settings.create_sprite(self.engine)
-        if sprite:
-            sprite.scale = self.radius * 2. / sprite.width
-            self._graphics.append(sprite)
-
-    def update_graphics(self, dt):
-        if self._graphics:
-            sprite = self._graphics[0]
-            sprite.position = self.position
-            sprite.rotation = -self.angle * 180. / math.pi
+    def on_sprite_created(self, sprite):
+        sprite.scale *= self.radius * 2. / sprite.width
 
 
 class Box(Body):
@@ -90,26 +87,10 @@ class Box(Body):
 
         self.engine.space.add(self._body, shape)
 
-    def create_graphics(self):
-        if self.graphic_settings.draw_sprite:
-            sprite = self.graphic_settings.create_sprite(self.engine)
-            if sprite:
-                sprite.scale = 1. / sprite.width
-                sprite.scale_x *= self.extent[0] * 2
-                sprite.scale_y *= self.extent[1] * 2
-                self._graphics.append(sprite)
-
-    def update_graphics(self, dt):
-        if self.graphic_settings.draw_sprite and self._graphics:
-            sprite = self._graphics[0]
-            sprite.position = self.position
-            sprite.rotation = -self.angle * 180. / math.pi
-
-    def render_graphics(self):
-        if self.graphic_settings.draw_lines:
-            batch: pyglet.graphics.Batch = self.engine.renderer.get_batch("lines")
-            if batch:
-                self.engine.renderer.draw_lines(batch, self.iter_world_points())
+    def on_sprite_created(self, sprite):
+        sprite.scale *= 1. / sprite.width
+        sprite.scale_x *= self.extent[0] * 2
+        sprite.scale_y *= self.extent[1] * 2
 
 
 class Trapezoid(Body):
@@ -166,23 +147,7 @@ class Trapezoid(Body):
 
         self.engine.space.add(self._body, shape)
 
-    def create_graphics(self):
-        if self.graphic_settings.draw_sprite:
-            sprite = self.graphic_settings.create_sprite(self.engine)
-            if sprite:
-                sprite.scale = 1. / sprite.width
-                sprite.scale_x *= self.extent[0] * 2
-                sprite.scale_y *= self.extent[1] * 2
-                self._graphics.append(sprite)
-
-    def update_graphics(self, dt):
-        if self.graphic_settings.draw_sprite and self._graphics:
-            sprite = self._graphics[0]
-            sprite.position = self.position
-            sprite.rotation = -self.angle * 180. / math.pi
-
-    def render_graphics(self):
-        if self.graphic_settings.draw_lines:
-            batch: pyglet.graphics.Batch = self.engine.renderer.get_batch("lines")
-            if batch:
-                self.engine.renderer.draw_lines(batch, self.iter_world_points())
+    def on_sprite_created(self, sprite):
+        sprite.scale *= 1. / sprite.width
+        sprite.scale_x *= self.extent[0] * 2
+        sprite.scale_y *= self.extent[1] * 2

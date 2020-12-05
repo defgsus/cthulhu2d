@@ -6,8 +6,8 @@ from .keyhandler import KeyHandler
 
 
 class Player(Circle):
-    def __init__(self, position):
-        super().__init__(position=position, radius=.4, density=1)
+    def __init__(self, position, **parameters):
+        super().__init__(position=position, radius=.4, density=1, **parameters)
         self.keys = KeyHandler()
         self.pick_dir = Vec2d()
 

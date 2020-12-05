@@ -37,7 +37,8 @@ class ImageGeneratorSettings(Parameterized):
 
     def to_uri(self):
         query = dict()
-        for key, value in self._parameters.items():
+        for key in sorted(self._parameters):
+            value = self._parameters[key]
             if key in self.TUPLE_KEYS:
                 value = ",".join(str(v) for v in value)
 

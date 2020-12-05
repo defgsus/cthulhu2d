@@ -1,6 +1,8 @@
 import math
 import random
 
+import numpy as np
+
 import pymunk
 from pymunk import Vec2d
 
@@ -94,6 +96,13 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
     MAP = MAP or random.choice(MAPS)
     density = random.uniform(.5, 25) if density is None else density
 
+    density_color_0 = np.array((.7, .7, .7), dtype=np.float)
+    density_color_1 = np.array((1, .3, .1), dtype=np.float)
+    def _density_color(density):
+        s = max(0, min(1, density / 25))
+        c = density_color_0 + s * (density_color_1 - density_color_0)
+        return np.round(c * 10) / 10
+
     boxes = {}
 
     do_multi = False
@@ -107,14 +116,17 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
     for y, row in enumerate(MAP):
         for x, v in enumerate(row):
             if v:
+                local_density = random.uniform(0.1, density)
                 graphic_settings = GraphicSettings(
                     draw_lines=True, draw_sprite=True,
-                    image_name=ImageGeneratorSettings(color=(1, 0.5, .2), shape="circle"),
+                    image_name=ImageGeneratorSettings(
+                        color=_density_color(local_density), shape="rect"
+                    ),
                 )
                 r = extent * extent_smaller
                 box = Box(
                     (x * extent*2 + pos[0], (len(MAP) - y - 1) * extent*2 + pos[1]), (r, r),
-                    density=density, graphic_settings=graphic_settings,
+                    density=local_density, graphic_settings=graphic_settings,
                 )
                 boxes[(x, y)] = box
                 engine.add_body(box)
