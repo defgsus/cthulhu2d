@@ -50,6 +50,7 @@ class Engine:
         self.time += dt
 
     def render(self, dt: float):
+        self.renderer.translation += (self.player.position * (1, 0) - self.renderer.translation) * dt
         for g in self.iter_graphics():
             g.update_graphics(dt)
         self.renderer.render()

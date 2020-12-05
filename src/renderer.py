@@ -14,7 +14,7 @@ class Renderer:
         self._permanent_batches = {}
         self._batches = {}
         self._batches_disabled = set()
-        self._translation = Vec2d()
+        self.translation = Vec2d()
 
     def get_permanent_batch(self, name):
         if name in self._batches_disabled:
@@ -47,7 +47,7 @@ class Renderer:
             aspect = self.engine.window_size.x / self.engine.window_size.y
             gl.glOrtho(-10*aspect, 10*aspect, -1, 19, -1, 1)
 
-            gl.glTranslatef(-self._translation.x, -self._translation.y, 0)
+            gl.glTranslatef(-self.translation.x, -self.translation.y, 0)
 
             self._render_batches()
 
