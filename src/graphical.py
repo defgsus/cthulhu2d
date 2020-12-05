@@ -13,7 +13,6 @@ class Graphical(EngineObject):
     def destroy_graphics(self):
         for g in self._graphics:
             g.delete()
-            del g
         self._graphics = []
 
     def update_graphics(self, dt):

@@ -12,27 +12,7 @@ from .graphical import Graphical
 
 class Constraint(Graphical):
 
-    def __init__(self, **parameters):
-        super().__init__(**parameters)
-        # the pymunk constraint
-        self._constraint = None
-
-    def create_physics(self):
-        raise NotImplementedError
-    
-    def destroy_physics(self):
-        if self._constraint:
-            self.engine.space.remove(self._constraint)
-        del self._constraint
-        self._constraint = None
-
-    def update(self, dt):
-        pass
-
-
-class JointBase(Constraint):
-
-    def __init__(self, a, b, breaking_impulse=0, **parameters):
+    def __init__(self, a, b, breaking_impulse=200, **parameters):
         # TODO: how to parmeterize a and b objects?
         super().__init__(
             breaking_impulse=breaking_impulse,
@@ -40,18 +20,45 @@ class JointBase(Constraint):
         )
         self.a = a
         self.b = b
+        # the pymunk constraint
+        self._constraint = None
+        # give bodies access to their constraints
         self.a._constraints.append(self)
         self.b._constraints.append(self)
 
+    @property
+    def breaking_impulse(self):
+        return self._parameters["breaking_impulse"]
 
-class FixedJoint(JointBase):
+    @property
+    def impulse(self):
+        if not self._constraint:
+            return 0.
+        return self._constraint.impulse
 
-    def __init__(self, a, b, anchor_a, anchor_b, breaking_impulse=0):
+    def create_physics(self):
+        raise NotImplementedError
+    
+    def destroy_physics(self):
+        if self._constraint:
+            self.engine.space.remove(self._constraint)
+        self._constraint = None
+
+    def update(self, dt):
+        true_impulse = self.impulse / dt
+
+        if true_impulse > self.breaking_impulse:
+            self.engine.remove_constraint(self)
+
+
+class FixedJoint(Constraint):
+
+    def __init__(self, a, b, anchor_a, anchor_b, **parameters):
         super().__init__(
             a, b,
             anchor_a=Vec2d(anchor_a),
             anchor_b=Vec2d(anchor_b),
-            breaking_impulse=breaking_impulse
+            **parameters,
         )
 
     @property
@@ -61,12 +68,6 @@ class FixedJoint(JointBase):
     @property
     def anchor_b(self):
         return self._parameters["anchor_b"]
-
-    @property
-    def impulse(self):
-        if not self._constraint:
-            return 0.
-        return self._constraint.impulse
 
     def create_physics(self):
         constraint = pymunk.PinJoint(
@@ -87,13 +88,15 @@ class FixedJoint(JointBase):
 
     def render_graphics(self):
         batch = self.engine.renderer.get_batch("lines")
-        for c in self.engine.constraints:
-            p1 = c.a.position + c.anchor_a.rotated(c.a.angle)
-            p2 = c.b.position + c.anchor_b.rotated(c.b.angle)
-            #f = (p2 - p1).normalized() * min(.3, 0.01 + c.impulse)
-            #p1 -= f
-            #p2 += f
-            batch.add(
-                2, gl.GL_LINES, None,
-                ("v2f", (p1.x, p1.y, p2.x, p2.y)),
-            )
+        if not batch:
+            return
+
+        p1 = self.a.position + self.anchor_a.rotated(self.a.angle)
+        p2 = self.b.position + self.anchor_b.rotated(self.b.angle)
+        #f = (p2 - p1).normalized() * min(.3, 0.01 + self.impulse)
+        #p1 -= f
+        #p2 += f
+        batch.add(
+            2, gl.GL_LINES, None,
+            ("v2f", (p1.x, p1.y, p2.x, p2.y)),
+        )

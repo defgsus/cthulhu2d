@@ -11,6 +11,8 @@ from .graphical import Graphical
 class Body(Graphical):
 
     def __init__(self, position, angle=0, density=0, **parameters):
+        from .constraints import Constraint
+
         super().__init__(
             start_position=Vec2d(position),
             start_angle=angle,
@@ -19,7 +21,7 @@ class Body(Graphical):
         )
         self._body: pymunk.Body = None
         self._shapes: List[pymunk.Shape] = []
-        self._constraints = []
+        self._constraints: List[Constraint] = []
 
     @property
     def position(self):
@@ -56,15 +58,24 @@ class Body(Graphical):
     def destroy_physics(self):
         for shape in self._shapes:
             self.engine.space.remove(shape)
-            del shape
+
         self._shapes = []
         if self._body:
             self.engine.space.remove(self._body)
-        del self._body
+
         self._body = None
 
     def update(self, dt):
         pass
+
+    def add_shape(self, shape: pymunk.Shape):
+        """
+        Add a pymunk Shape object.
+        To be called within create_physics()
+        """
+        shape.density = self.density
+        shape.friction = 1.
+        self._shapes.append(shape)
 
     def _create_body(self):
         if not self.density:

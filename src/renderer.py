@@ -13,17 +13,31 @@ class Renderer:
         self.engine = engine
         self._permanent_batches = {}
         self._batches = {}
+        self._batches_disabled = set()
         self._translation = Vec2d()
 
     def get_permanent_batch(self, name):
+        if name in self._batches_disabled:
+            return None
         if name not in self._permanent_batches:
             self._permanent_batches[name] = pyglet.graphics.Batch()
         return self._permanent_batches[name]
     
     def get_batch(self, name):
+        if name in self._batches_disabled:
+            return None
         if name not in self._batches:
             self._batches[name] = pyglet.graphics.Batch()
         return self._batches[name]
+
+    def is_batch_enabled(self, name):
+        return name not in self._batches_disabled
+
+    def set_batch_enabled(self, name, enabled=True):
+        if enabled:
+            self._batches_disabled.remove(name)
+        else:
+            self._batches_disabled.add(name)
 
     def render(self):
         gl.glMatrixMode(gl.GL_PROJECTION)

@@ -1,10 +1,10 @@
-import pyglet
 import time
 
-from .engine import Engine
-from .map_gen import generate_map
+import pyglet
+from pyglet import gl
 
-gl = pyglet.gl
+from .engine import Engine
+from . import map_gen
 
 
 class MainWindow(pyglet.window.Window):
@@ -23,7 +23,7 @@ class MainWindow(pyglet.window.Window):
         #super().__init__(fullscreen=True)
         self.fps_display = pyglet.window.FPSDisplay(self)
         self.engine = Engine()
-        generate_map(self.engine)
+        map_gen.initialize_map(self.engine)
 
         self.do_render = True
         self.do_physics = True
@@ -35,15 +35,18 @@ class MainWindow(pyglet.window.Window):
             self.set_fullscreen(not self.fullscreen)
         #if symbol == ord('1'):
         #    self.engine.add_more()
-        #if ord('2') <= symbol <= (ord('1') + len(MAPS)):
-        #    self.engine.add_map(MAPS[symbol - ord('2')])
+        if ord('1') <= symbol < (ord('1') + len(map_gen.MAPS)):
+            pos = self.engine.player.position + (0, 20)
+            map_gen.add_from_map(self.engine, map_gen.MAPS[symbol - ord('1')], pos=pos)
         if symbol == ord('g'):
             self.do_render = not self.do_render
         if symbol == ord('p'):
             self.do_physics = not self.do_physics
         if symbol == ord('d'):
-            self.engine.dump()
-            #self.engine.debug_render = not self.engine.debug_render
+            #self.engine.dump()
+            self.engine.renderer.set_batch_enabled(
+                "lines", not self.engine.renderer.is_batch_enabled("lines")
+            )
         #if symbol == ord('t'):
         #    self.engine.add_tree()
         if symbol == 65307:

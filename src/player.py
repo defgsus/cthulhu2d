@@ -1,3 +1,4 @@
+import pymunk
 from pymunk import Vec2d
 
 from .primitives import Circle
@@ -51,19 +52,15 @@ class Player(Circle):
 
     def pick(self, dir):
         pick_pos = self._body.position + dir
-        return
 
-        hit = self.scene.space.point_query_nearest(pick_pos, 0, pymunk.ShapeFilter())
-        if hit and hit.shape:
-            shape = hit.shape
-            box = self.scene.body_to_box.get(shape.body)
-            if box and box.mass:
-                self.scene.remove_box(box)
+        body = self.engine.point_query_nearest_body(pick_pos)
+        if body and body.density:
+            self.engine.remove_body(body)
 
     def put(self, dir):
-        return
+        from .primitives import Box
         put_pos = self.body.position + dir
-        self.scene.add_box(
-            Box(put_pos, (.5, .5), mass=10)
+        self.engine.add_body(
+            Box(put_pos, (.5, .5), density=10)
         )
 

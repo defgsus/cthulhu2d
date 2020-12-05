@@ -18,13 +18,14 @@ class Circle(Body):
 
     def create_physics(self):
         shape = pymunk.Circle(self._create_body(), radius=self.radius)
-        shape.density = self.density
+        self.add_shape(shape)
 
-        self._shapes.append(shape)
         self.engine.space.add(self._body, shape)
 
     def create_graphics(self):
         batch = self.engine.renderer.get_permanent_batch("sprites")
+        if not batch:
+            return
 
         image = self.engine.images.centered_image("player1")
         sprite = pyglet.sprite.Sprite(image, batch=batch, subpixel=True)
@@ -49,13 +50,14 @@ class Box(Body):
 
     def create_physics(self):
         shape = pymunk.Poly.create_box(self._create_body(), self.extent * 2)
-        shape.density = self.density
+        self.add_shape(shape)
 
-        self._shapes.append(shape)
         self.engine.space.add(self._body, shape)
 
     def create_graphics(self):
         batch = self.engine.renderer.get_permanent_batch("sprites")
+        if not batch:
+            return
 
         image = self.engine.images.centered_image("box1")
         sprite = pyglet.sprite.Sprite(image, batch=batch, subpixel=True)
