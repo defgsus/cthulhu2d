@@ -1,6 +1,6 @@
 import unittest
 
-from src.image_gen import ImageGenerator, RGBAImage
+from src.image_gen import ImageGenerator, ImageGeneratorSettings, RGBAImage
 
 
 class TestImageGen(unittest.TestCase):
@@ -18,6 +18,12 @@ class TestImageGen(unittest.TestCase):
         gen = ImageGenerator()
         image = gen.create_from_uri("/gen/?size=23,42&shape=rect")
         print(image)
+
+    def test_gen_settings(self):
+        settings = ImageGeneratorSettings(
+            shape="circle", size=(1, 2), color=(0, 1, 2, 3)
+        )
+        print(settings)
 
 
 if __name__ == '__main__':

@@ -2,13 +2,16 @@
 
 class Parameterized:
 
-    def __init__(self, **parameters):
-        self._parameters = parameters
+    def __init__(self):
+        pass
 
-    def get_parameter(self, *name):
-        if len(name) < 1:
-            return None
-        elif len(name) < 2:
-            return self._parameters.get(name)
-        else:
-            return tuple(self._parameters.get(n) for n in name)
+    def to_dict(self):
+        return dict()
+
+    def __repr__(self):
+        params = self.to_dict()
+        params = ", ".join(
+            f"{key}={repr(value)}"
+            for key, value in params.items()
+        )
+        return f"{self.__class__.__name__}({params})"

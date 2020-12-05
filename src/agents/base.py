@@ -1,5 +1,7 @@
 from typing import List
 
+from pymunk import Vec2d
+
 from ..engine_obj import EngineObject
 from ..body import Body
 from ..constraints import Constraint
@@ -8,13 +10,10 @@ from ..constraints import Constraint
 class AgentBase(EngineObject):
 
     def __init__(self, start_position, **parameters):
-        super().__init__(start_position=start_position, **parameters)
+        super().__init__(**parameters)
+        self.start_position = Vec2d(start_position)
         self._bodies: List[Body] = []
         self._constraints: List[Constraint] = []
-
-    @property
-    def start_position(self):
-        return self._parameters["start_position"]
 
     @property
     def bodies(self):

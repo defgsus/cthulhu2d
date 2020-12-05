@@ -16,25 +16,19 @@ class Constraint(Graphical):
         if "graphic_settings" not in parameters:
             parameters["graphic_settings"] = GraphicSettings(
                 draw_lines=True, draw_sprite=False,
-                line_batch_name="constraint-lines"
+                # line_batch_name="constraint-lines"
             )
 
         # TODO: how to parmeterize a and b objects?
-        super().__init__(
-            breaking_impulse=breaking_impulse,
-            **parameters
-        )
+        super().__init__(**parameters)
         self.a = a
         self.b = b
+        self.breaking_impulse = breaking_impulse
         # the pymunk constraint
         self._constraint = None
         # give bodies access to their constraints
         self.a._constraints.append(self)
         self.b._constraints.append(self)
-
-    @property
-    def breaking_impulse(self):
-        return self._parameters["breaking_impulse"]
 
     @property
     def impulse(self):
@@ -54,7 +48,7 @@ class Constraint(Graphical):
         true_impulse = self.impulse / dt
 
         if self.breaking_impulse and true_impulse > self.breaking_impulse:
-            #print(f"constraint broken {true_impulse} > {self.breaking_impulse}: {self}", self._parameters)
+            #print(f"constraint broken {true_impulse} > {self.breaking_impulse}: {self}")
             self.engine.remove_constraint(self)
 
     def iter_world_points(self):
@@ -66,20 +60,10 @@ class Constraint(Graphical):
 class FixedJoint(Constraint):
 
     def __init__(self, a, b, anchor_a, anchor_b, **parameters):
-        super().__init__(
-            a, b,
-            anchor_a=Vec2d(anchor_a),
-            anchor_b=Vec2d(anchor_b),
-            **parameters,
-        )
-
-    @property
-    def anchor_a(self):
-        return self._parameters["anchor_a"]
-
-    @property
-    def anchor_b(self):
-        return self._parameters["anchor_b"]
+        super().__init__(a, b, **parameters)
+        self.anchor_a = Vec2d(anchor_a)
+        self.anchor_b = Vec2d(anchor_b)
+        self.original_distance = None
 
     @property
     def distance(self):
@@ -92,10 +76,6 @@ class FixedJoint(Constraint):
         if self._constraint:
             self._constraint.distance = v
 
-    @property
-    def original_distance(self):
-        return self._parameters.get("original_distance", 0.)
-
     def create_physics(self):
         constraint = pymunk.PinJoint(
             self.a.body, self.b.body,
@@ -105,26 +85,15 @@ class FixedJoint(Constraint):
 
         self._constraint = constraint
         self.engine.space.add(constraint)
-        self._parameters["original_distance"] = self._constraint.distance
+        self.original_distance = self._constraint.distance
 
 
 class PivotAnchorJoint(Constraint):
 
     def __init__(self, a, b, anchor_a, anchor_b, **parameters):
-        super().__init__(
-            a, b,
-            anchor_a=Vec2d(anchor_a),
-            anchor_b=Vec2d(anchor_b),
-            **parameters,
-        )
-
-    @property
-    def anchor_a(self):
-        return self._parameters["anchor_a"]
-
-    @property
-    def anchor_b(self):
-        return self._parameters["anchor_b"]
+        super().__init__(a, b, **parameters)
+        self.anchor_a = Vec2d(anchor_a)
+        self.anchor_b = Vec2d(anchor_b)
 
     def create_physics(self):
         constraint = pymunk.PivotJoint(
@@ -135,58 +104,31 @@ class PivotAnchorJoint(Constraint):
         self._constraint = constraint
         self.engine.space.add(constraint)
 
-    def create_graphics(self):
-        pass
-
 
 class SpringJoint(Constraint):
 
     def __init__(self, a, b, anchor_a, anchor_b, stiffness=1000, damping=10, rest_length=None, **parameters):
+        super().__init__(a, b, **parameters)
+        self.anchor_a = Vec2d(anchor_a)
+        self.anchor_b = Vec2d(anchor_b)
         if rest_length is None:
             world_pos_a = a.position + anchor_a
             world_pos_b = b.position + anchor_b
             rest_length = (world_pos_a - world_pos_b).get_length()
-
-        super().__init__(
-            a, b,
-            anchor_a=Vec2d(anchor_a),
-            anchor_b=Vec2d(anchor_b),
-            rest_length=rest_length,
-            original_rest_length=rest_length,
-            stiffness=stiffness,
-            damping=damping,
-            **parameters,
-        )
-
-    @property
-    def anchor_a(self):
-        return self._parameters["anchor_a"]
-
-    @property
-    def anchor_b(self):
-        return self._parameters["anchor_b"]
+        self._rest_length = rest_length
+        self.original_rest_length = rest_length
+        self.stiffness = stiffness
+        self.damping = damping
 
     @property
     def rest_length(self):
-        return self._parameters["rest_length"]
-
-    @property
-    def original_rest_length(self):
-        return self._parameters["original_rest_length"]
+        return self._rest_length
 
     @rest_length.setter
     def rest_length(self, v):
-        self._parameters["rest_length"] = v
+        self._rest_length = v
         if self._constraint:
             self._constraint.rest_length = v
-
-    @property
-    def stiffness(self):
-        return self._parameters["stiffness"]
-
-    @property
-    def damping(self):
-        return self._parameters["damping"]
 
     def create_physics(self):
         constraint = pymunk.DampedSpring(
@@ -197,7 +139,6 @@ class SpringJoint(Constraint):
             stiffness=self.stiffness,
             damping=self.damping,
         )
-        constraint.error_bias = 0.000001
 
         self._constraint = constraint
         self.engine.space.add(constraint)
@@ -206,20 +147,9 @@ class SpringJoint(Constraint):
 class RotaryLimitJoint(Constraint):
 
     def __init__(self, a, b, min, max, **parameters):
-        super().__init__(
-            a, b,
-            min=min,
-            max=max,
-            **parameters,
-        )
-
-    @property
-    def min(self):
-        return self._parameters["min"]
-
-    @property
-    def max(self):
-        return self._parameters["max"]
+        super().__init__(a, b, **parameters)
+        self.min = min
+        self.max = max
 
     def create_physics(self):
         constraint = pymunk.RotaryLimitJoint(

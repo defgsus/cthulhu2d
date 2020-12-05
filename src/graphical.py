@@ -9,15 +9,9 @@ from .image_gen import ImageGeneratorSettings
 class Graphical(EngineObject):
 
     def __init__(self, graphic_settings=None, **parameters):
-        super().__init__(
-            graphic_settings=graphic_settings or GraphicSettings(draw_lines=True),
-            **parameters,
-        )
+        super().__init__(**parameters)
+        self.graphic_settings = graphic_settings or GraphicSettings(draw_lines=True)
         self._graphics = []
-
-    @property
-    def graphic_settings(self):
-        return self._parameters["graphic_settings"]
 
     def create_graphics(self):
         """Default implementation create a sprite if configured in graphics_settings"""
@@ -69,42 +63,28 @@ class GraphicSettings(Parameterized):
             image_batch_name="sprites",
             line_batch_name="lines",
     ):
-        if isinstance(image_name, ImageGeneratorSettings):
-            image_name = image_name.to_uri()
-        super().__init__(
-            draw_lines=draw_lines,
-            draw_sprite=draw_sprite,
-            image_name=image_name,
-            image_alignment=image_alignment,
-            image_batch_name=image_batch_name,
-            line_batch_name=line_batch_name,
-        )
-
-    @property
-    def draw_lines(self):
-        return self._parameters["draw_lines"]
-
-    @property
-    def draw_sprite(self):
-        return self._parameters["draw_sprite"]
-
-    @property
-    def line_batch_name(self):
-        return self._parameters["line_batch_name"]
+        super().__init__()
+        self.draw_lines = draw_lines
+        self.draw_sprite = draw_sprite
+        self.image_name = image_name
+        self.image_alignment = image_alignment
+        self.image_batch_name = image_batch_name
+        self.line_batch_name = line_batch_name
 
     def get_image(self, engine):
-        image_name, image_alignment = self.get_parameter("image_name", "image_alignment")
-        if not image_name:
+        if not self.image_name:
             return None
 
-        if isinstance(image_name, ImageGeneratorSettings):
-            image_name = image_name.to_uri()
+        if isinstance(self.image_name, ImageGeneratorSettings):
+            image_name = self.image_name.to_uri()
+        else:
+            image_name = self.image_name
 
-        if image_alignment == "center":
+        if self.image_alignment == "center":
             return engine.images.centered_image(image_name)
 
     def create_sprite(self, engine, batch_name=None):
-        batch = engine.renderer.get_permanent_batch(batch_name or self.get_parameter("image_batch_name"))
+        batch = engine.renderer.get_permanent_batch(batch_name or self.image_batch_name)
         if not batch:
             return
 

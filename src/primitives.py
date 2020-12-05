@@ -12,11 +12,8 @@ from .body import Body
 class Circle(Body):
 
     def __init__(self, position, radius, **parameters):
-        super().__init__(position=position, radius=radius, **parameters)
-
-    @property
-    def radius(self):
-        return self._parameters["radius"]
+        super().__init__(position=position, **parameters)
+        self.radius = radius
 
     def iter_points(self):
         steps = 12
@@ -37,27 +34,8 @@ class Circle(Body):
 class Box(Body):
 
     def __init__(self, position, extent, angle=0., **parameters):
-        super().__init__(position=position, angle=angle, extent=Vec2d(extent), **parameters)
-
-    @property
-    def extent(self):
-        return self._parameters["extent"]
-
-    @property
-    def bottom_left(self):
-        return self.position - self.extent
-
-    @property
-    def bottom_right(self):
-        return self.position + (self.extent.x, -self.extent.y)
-
-    @property
-    def top_left(self):
-        return self.position + (-self.extent.x, self.extent.y)
-
-    @property
-    def top_right(self):
-        return self.position + self.extent
+        super().__init__(position=position, angle=angle, **parameters)
+        self.extent = Vec2d(extent)
 
     @property
     def bottom_left_extent(self):
@@ -97,27 +75,15 @@ class Trapezoid(Body):
 
     def __init__(self, position, width_top, width_bottom, height, angle=0., density=0.):
         super().__init__(
-            position=position, angle=angle, density=density, 
-            width_top=width_top,
-            width_bottom=width_bottom,
-            height=height,
+            position=position, angle=angle, density=density,
         )
+        self.width_top = width_top
+        self.width_bottom = width_bottom
+        self.height = height
 
     @property
     def extent(self):
         return Vec2d(max(self.width_top, self.width_bottom), self.height) / 2
-
-    @property
-    def width_top(self):
-        return self._parameters["width_top"]
-
-    @property
-    def width_bottom(self):
-        return self._parameters["width_bottom"]
-
-    @property
-    def height(self):
-        return self._parameters["height"]
 
     @property
     def bottom_left_extent(self):

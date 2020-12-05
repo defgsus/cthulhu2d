@@ -12,13 +12,12 @@ class Body(Graphical):
 
     def __init__(self, position, angle=0, density=0, **parameters):
         from .constraints import Constraint
+        super().__init__(**parameters)
 
-        super().__init__(
-            start_position=Vec2d(position),
-            start_angle=angle,
-            density=density,
-            **parameters,
-        )
+        self.start_position = Vec2d(position)
+        self.start_angle = angle
+        self.density = density
+
         self._body: pymunk.Body = None
         self._shapes: List[pymunk.Shape] = []
         self._constraints: List[Constraint] = []
@@ -27,24 +26,20 @@ class Body(Graphical):
     def position(self):
         if self._body:
             return self._body.position
-        return self._parameters["start_position"]
+        return self.start_position
 
     @position.setter
     def position(self, v):
         v = Vec2d(v)
         if self._body:
             self._body.position = v
-        self._parameters["start_position"] = v
+        self.start_position = v
 
     @property
     def angle(self):
         if self._body:
             return self._body.angle
-        return self._parameters["start_angle"]
-
-    @property
-    def density(self):
-        return self._parameters["density"]
+        return self.start_angle
 
     @property
     def body(self):
@@ -82,7 +77,7 @@ class Body(Graphical):
             self._body = pymunk.Body(body_type=pymunk.Body.STATIC)
         else:
             self._body = pymunk.Body()
-        self._body.position = self._parameters["start_position"]
+        self._body.position = self.start_position
         return self._body
 
     def iter_points(self):

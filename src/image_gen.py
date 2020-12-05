@@ -17,28 +17,24 @@ class ImageGeneratorSettings(Parameterized):
             size=(32, 32),
             color=(1, 1, 1, 1),
     ):
-        super().__init__(
-            shape=shape,
-            size=size,
-            color=color,
-        )
+        super().__init__()
+        self.shape = shape
+        self.size = size
+        self.color = color
 
-    @property
-    def shape(self):
-        return self._parameters["shape"]
-
-    @property
-    def size(self):
-        return self._parameters["size"]
-
-    @property
-    def color(self):
-        return self._parameters["color"]
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "shape": self.shape,
+            "size": self.size,
+            "color": self.color,
+        }
 
     def to_uri(self):
         query = dict()
-        for key in sorted(self._parameters):
-            value = self._parameters[key]
+        parameters = self.to_dict()
+        for key in sorted(parameters):
+            value = parameters[key]
             if key in self.TUPLE_KEYS:
                 value = ",".join(str(v) for v in value)
 
@@ -60,7 +56,7 @@ class ImageGeneratorSettings(Parameterized):
                 else:
                     value = tuple(float(v) for v in value)
 
-            settings._parameters[key] = value
+            setattr(settings, key, value)
         return settings
 
 
@@ -80,15 +76,13 @@ class ImageGenerator:
         return self.create_from_settings(settings)
 
     def create_from_settings(self, settings: ImageGeneratorSettings):
-        size, shape, color = settings.get_parameter("size", "shape", "color")
+        image = RGBAImage(settings.size)
+        image.fill(settings.color)
 
-        image = RGBAImage(size)
-        image.fill(color)
-
-        if shape == "rect":
+        if settings.shape == "rect":
             image.add_mask(image.rect_bevel_mask())
 
-        elif shape == "circle":
+        elif settings.shape == "circle":
             image.fill_alpha(image.circle_mask())
 
         return image.to_pyglet()
@@ -153,3 +147,4 @@ class RGBAImage:
                     min(0., 1. - padding - yf)
                 mask[y][x][0] = value / padding * amount
         return mask
+

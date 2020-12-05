@@ -11,16 +11,9 @@ from .base import AgentBase
 class Tentacle(AgentBase):
     
     def __init__(self, start_position, num_segments=15, **parameters):
-        super().__init__(
-            start_position=Vec2d(start_position),
-            num_segments=num_segments,
-            **parameters,
-        )
+        super().__init__(start_position=Vec2d(start_position), **parameters)
+        self.num_segments = num_segments
         self._motors = []
-
-    @property
-    def num_segments(self):
-        return self._parameters["num_segments"]
 
     def update(self, dt):
         time = self.engine.time

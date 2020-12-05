@@ -3,10 +3,10 @@ from .parameterized import Parameterized
 
 
 class EngineObject(Parameterized):
-    def __init__(self, **parameters):
-        from .engine import Engine
 
-        super().__init__(**parameters)
+    def __init__(self, **nothing_yet):
+        super().__init__()
+        from .engine import Engine
         self._engine: Engine = None
 
     @property
@@ -18,4 +18,3 @@ class EngineObject(Parameterized):
 
     def on_engine_detached(self):
         pass
-
