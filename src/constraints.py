@@ -18,8 +18,6 @@ class Constraint(Graphical):
                 draw_lines=True, draw_sprite=False,
                 # line_batch_name="constraint-lines"
             )
-
-        # TODO: how to parmeterize a and b objects?
         super().__init__(**parameters)
         self.a = a
         self.b = b
@@ -29,6 +27,14 @@ class Constraint(Graphical):
         # give bodies access to their constraints
         self.a._constraints.append(self)
         self.b._constraints.append(self)
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "a": self.a.id,
+            "b": self.b.id,
+            "breaking_impulse": self.breaking_impulse,
+        }
 
     @property
     def impulse(self):
@@ -65,6 +71,14 @@ class FixedJoint(Constraint):
         self.anchor_b = Vec2d(anchor_b)
         self.original_distance = None
 
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "anchor_a": self.anchor_a,
+            "anchor_b": self.anchor_b,
+            "original_distance": self.original_distance,
+        }
+
     @property
     def distance(self):
         if not self._constraint:
@@ -95,6 +109,13 @@ class PivotAnchorJoint(Constraint):
         self.anchor_a = Vec2d(anchor_a)
         self.anchor_b = Vec2d(anchor_b)
 
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "anchor_a": self.anchor_a,
+            "anchor_b": self.anchor_b,
+        }
+
     def create_physics(self):
         constraint = pymunk.PivotJoint(
             self.a.body, self.b.body,
@@ -119,6 +140,16 @@ class SpringJoint(Constraint):
         self.original_rest_length = rest_length
         self.stiffness = stiffness
         self.damping = damping
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "anchor_a": self.anchor_a,
+            "anchor_b": self.anchor_b,
+            "stiffness": self.stiffness,
+            "damping": self.damping,
+            "rest_length": self.rest_length,
+        }
 
     @property
     def rest_length(self):
@@ -150,6 +181,13 @@ class RotaryLimitJoint(Constraint):
         super().__init__(a, b, **parameters)
         self.min = min
         self.max = max
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "min": self.min,
+            "max": self.max,
+        }
 
     def create_physics(self):
         constraint = pymunk.RotaryLimitJoint(

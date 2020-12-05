@@ -11,9 +11,10 @@ from .body import Body
 from .player import Player
 from .constraints import Constraint
 from .agents.base import AgentBase
+from .log import LogMixin
 
 
-class Engine:
+class Engine(LogMixin):
 
     def __init__(self):
         self.space = pymunk.Space()
@@ -58,6 +59,7 @@ class Engine:
         self.renderer.render()
 
     def add_body(self, body: Body):
+        self.log(3, "add_body", body)
         body._engine = self
         self.bodies.append(body)
         body.create_graphics()
@@ -66,6 +68,7 @@ class Engine:
         body.on_engine_attached()
 
     def remove_body(self, body: Body):
+        self.log(3, "remove_body", body)
         for constraint in body._constraints:
             self.remove_constraint(constraint)
         self.bodies.remove(body)
@@ -76,6 +79,7 @@ class Engine:
         body._engine = None
 
     def add_constraint(self, constraint: Constraint):
+        self.log(3, "add_constraint", constraint)
         constraint._engine = self
         self.constraints.append(constraint)
         constraint.create_physics()
@@ -83,6 +87,7 @@ class Engine:
         constraint.on_engine_attached()
 
     def remove_constraint(self, constraint: Constraint):
+        self.log(3, "remove_constraint", constraint)
         if constraint not in self.constraints:
             return
         for obj in (constraint.a, constraint.b):
@@ -95,11 +100,13 @@ class Engine:
         constraint._engine = None
 
     def add_agent(self, agent: AgentBase):
+        self.log(3, "add_agent", agent)
         agent._engine = self
         self.agents.append(agent)
         agent.create_objects()
 
     def remove_agent(self, agent: AgentBase):
+        self.log(3, "remove_agent", agent)
         agent.remove_objects()
         self.agents.remove(agent)
         agent._engine = None

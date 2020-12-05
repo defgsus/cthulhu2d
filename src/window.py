@@ -25,6 +25,9 @@ class MainWindow(pyglet.window.Window):
             super().__init__(fullscreen=True)
         self.fps_display = pyglet.window.FPSDisplay(self)
         self.engine = Engine()
+        #from .engine_obj import EngineObject
+        #print(EngineObject.engine_object_classes)
+        #exit()
         map_gen.initialize_map(self.engine)
 
         self.do_render = True
