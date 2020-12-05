@@ -7,6 +7,7 @@ from pymunk import Vec2d
 from .engine import Engine
 from .primitives import Box, Circle
 from .constraints import FixedJoint
+from .agents.tentacle import Tentacle
 
 
 def initialize_map(engine: Engine):
@@ -14,7 +15,9 @@ def initialize_map(engine: Engine):
     engine.add_body(
         Box((0, -5), (1000, 5), density=0)
     )
-    snake(engine)
+    #snake(engine)
+    engine.add_agent(Tentacle((10, 0)))
+
 
 
 MAPS = [
@@ -93,13 +96,16 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
 
     do_multi = False
     def _connect(a, b, anchor_a, anchor_b):
-        engine.add_constraint(FixedJoint(a, b, anchor_a, anchor_b))
+        engine.add_constraint(FixedJoint(a, b, anchor_a, anchor_b, breaking_impulse=500))
 
     extent = random.uniform(.1, .5)
+    extent_smaller = 1.
+    if random.randrange(5) == 0:
+        extent_smaller = 1. - random.uniform(0., random.uniform(0., 1.))
     for y, row in enumerate(MAP):
         for x, v in enumerate(row):
             if v:
-                r = extent * .9#random.uniform(.2, 1)
+                r = extent * extent_smaller
                 box = Box((x * extent*2 + pos[0], (len(MAP) - y - 1) * extent*2 + pos[1]), (r, r), density=density)
                 boxes[(x, y)] = box
                 engine.add_body(box)

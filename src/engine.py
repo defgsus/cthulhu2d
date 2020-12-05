@@ -10,6 +10,7 @@ from .renderer import Renderer
 from .body import Body
 from .player import Player
 from .constraints import Constraint
+from .agents.base import AgentBase
 
 
 class Engine:
@@ -21,6 +22,7 @@ class Engine:
         self.images = Images()
         self.renderer = Renderer(self)
         self.bodies: List[Body] = []
+        self.agents: List[AgentBase] = []
         self._pymunk_body_to_body = {}
         self._empty_shape_filter = pymunk.ShapeFilter()
         self.constraints: List[Constraint] = []
@@ -37,10 +39,10 @@ class Engine:
         self._window_size = Vec2d(v)
 
     def update(self, dt, fixed_dt=None):
-        for body in self.bodies:
-            body.update(dt)
-        for constraint in self.constraints:
-            constraint.update(dt)
+        for p in self.iter_physics():
+            p.update(dt)
+        for agent in self.agents:
+            agent.update(dt)
 
         pymunk_steps = 10
         pymunk_dt = (fixed_dt or dt) / pymunk_steps
@@ -92,17 +94,33 @@ class Engine:
         constraint.on_engine_detached()
         constraint._engine = None
 
+    def add_agent(self, agent: AgentBase):
+        agent._engine = self
+        self.agents.append(agent)
+        agent.create_objects()
+
+    def remove_agent(self, agent: AgentBase):
+        agent.remove_objects()
+        self.agents.remove(agent)
+        agent._engine = None
+
     def iter_graphics(self):
         for g in self.bodies:
             yield g
         for g in self.constraints:
             yield g
 
+    def iter_physics(self):
+        for p in self.bodies:
+            yield p
+        for p in self.constraints:
+            yield p
+
     def point_query_nearest_body(self, position, max_distance=0, shape_filter=None):
         hit = self.space.point_query_nearest(
             position, max_distance, shape_filter or self._empty_shape_filter
         )
-        print("Hit", position, hit)
+        # print("Hit", position, hit)
         if not hit or not hit.shape:
             return None
 

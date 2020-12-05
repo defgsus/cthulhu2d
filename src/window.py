@@ -19,8 +19,8 @@ class MainWindow(pyglet.window.Window):
     }
 
     def __init__(self, size):
-        super().__init__(width=size[0], height=size[1], fullscreen=False)
-        #super().__init__(fullscreen=True)
+        #super().__init__(width=size[0], height=size[1], fullscreen=False)
+        super().__init__(fullscreen=True)
         self.fps_display = pyglet.window.FPSDisplay(self)
         self.engine = Engine()
         map_gen.initialize_map(self.engine)

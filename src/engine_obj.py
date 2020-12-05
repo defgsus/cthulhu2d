@@ -4,8 +4,10 @@ from .parameterized import Parameterized
 
 class EngineObject(Parameterized):
     def __init__(self, **parameters):
+        from .engine import Engine
+
         super().__init__(**parameters)
-        self._engine = None
+        self._engine: Engine = None
 
     @property
     def engine(self):
