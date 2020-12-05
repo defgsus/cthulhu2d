@@ -8,6 +8,8 @@ from .engine import Engine
 from .primitives import Box, Circle
 from .constraints import FixedJoint
 from .agents.tentacle import Tentacle
+from .graphical import GraphicSettings
+from .image_gen import ImageGeneratorSettings
 
 
 def initialize_map(engine: Engine):
@@ -105,8 +107,15 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
     for y, row in enumerate(MAP):
         for x, v in enumerate(row):
             if v:
+                graphic_settings = GraphicSettings(
+                    draw_lines=True, draw_sprite=True,
+                    image_name=ImageGeneratorSettings(color=(1, 0.5, .2), shape="circle"),
+                )
                 r = extent * extent_smaller
-                box = Box((x * extent*2 + pos[0], (len(MAP) - y - 1) * extent*2 + pos[1]), (r, r), density=density)
+                box = Box(
+                    (x * extent*2 + pos[0], (len(MAP) - y - 1) * extent*2 + pos[1]), (r, r),
+                    density=density, graphic_settings=graphic_settings,
+                )
                 boxes[(x, y)] = box
                 engine.add_body(box)
 

@@ -85,5 +85,12 @@ class Body(Graphical):
         self._body.position = self._parameters["start_position"]
         return self._body
 
+    def iter_points(self):
+        raise StopIteration
+
+    def iter_world_points(self):
+        for p in self.iter_points():
+            yield self.position + p.rotated(self.angle)
+
     def dump(self, file=None):
         print(f"{self.__class__.__name__}: pos={self.position}, ang={self.angle}", file=file)

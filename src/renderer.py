@@ -66,3 +66,23 @@ class Renderer:
         for key in tuple(self._batches):
             self._batches[key].draw()
             del self._batches[key]
+
+    def draw_lines(self, batch, vertices):
+        vertices = tuple(vertices)
+        num_vertices = len(vertices)
+        indices = []
+        for i in range(num_vertices):
+            indices.append(i)
+            indices.append((i + 1) % len(vertices))
+        return self.draw_lines_indexed(batch, vertices, indices)
+
+    def draw_lines_indexed(self, batch, vertices, indices):
+        flat_vertices = []
+        for pos in vertices:
+            flat_vertices.append(pos.x)
+            flat_vertices.append(pos.y)
+        batch.add_indexed(
+            len(vertices), gl.GL_LINES, None,
+            indices,
+            ("v2f", flat_vertices),
+            )
