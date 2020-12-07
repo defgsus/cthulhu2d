@@ -7,7 +7,9 @@ from .images import Images
 from .renderer import Renderer
 from .objects.body import Body
 from .objects.player import Player
-from .constraints import Constraint
+from .objects.constraints import Constraint
+from .objects.graphical import Graphical
+from .objects.physical import PhysicsInterface
 from .agents.base import AgentBase
 from .log import LogMixin
 
@@ -53,10 +55,15 @@ class Engine(LogMixin):
             self._create_physics()
             self._create_agent_objects()
 
-        for p in self.iter_physics():
-            p.update(dt)
-        for agent in self.agents:
-            agent.update(dt)
+        for o in self.iter_physics():
+            o._base_update_called = False
+            o.update(dt)
+            if not o._base_update_called:
+                raise RuntimeError(
+                    f"super update() method has not been called: {o}"
+                )
+
+            o.update(dt)
 
         pymunk_steps = 10
         pymunk_dt = (fixed_dt or dt) / pymunk_steps
@@ -117,17 +124,24 @@ class Engine(LogMixin):
         agent._engine = None
         self._agent_to_objects.pop(agent, None)
 
+    def iter_objects(self):
+        """Yields all EngineObject instances"""
+        for o in self.bodies:
+            yield o
+        for o in self.constraints:
+            yield o
+        for o in self.agents:
+            yield o
+
     def iter_graphics(self):
-        for g in self.bodies:
-            yield g
-        for g in self.constraints:
-            yield g
+        for o in self.iter_objects():
+            if isinstance(o, Graphical):
+                yield o
 
     def iter_physics(self):
-        for p in self.bodies:
-            yield p
-        for p in self.constraints:
-            yield p
+        for o in self.iter_objects():
+            if isinstance(o, PhysicsInterface):
+                yield o
 
     def point_query_nearest_body(self, position, max_distance=0, shape_filter=None):
         hit = self.space.point_query_nearest(

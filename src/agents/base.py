@@ -2,15 +2,18 @@ from typing import List
 
 from pymunk import Vec2d
 
+from ..objects.physical import PhysicsInterface
 from ..objects.base import EngineObject
 from ..objects.body import Body
-from ..constraints import Constraint
+from ..objects.constraints import Constraint
 
 
-class AgentBase(EngineObject):
+class AgentBase(PhysicsInterface, EngineObject):
 
     def __init__(self, start_position, **parameters):
-        super().__init__(**parameters)
+        EngineObject.__init__(self, **parameters)
+        PhysicsInterface.__init__(self)
+
         self.start_position = Vec2d(start_position)
         self._bodies: List[Body] = []
         self._constraints: List[Constraint] = []
@@ -24,7 +27,7 @@ class AgentBase(EngineObject):
         return self._constraints
 
     def update(self, dt):
-        pass
+        super().update(dt)
 
     def create_objects(self):
         pass

@@ -1,10 +1,11 @@
 import pymunk
 from pymunk import Vec2d
 
-from .objects.graphical import Graphical, GraphicSettings
+from .graphical import Graphical, GraphicSettings
+from .physical import PhysicsInterface
 
 
-class Constraint(Graphical):
+class Constraint(PhysicsInterface, Graphical):
 
     def __init__(self, a, b, breaking_impulse=0, **parameters):
         if "graphic_settings" not in parameters:
@@ -12,7 +13,9 @@ class Constraint(Graphical):
                 draw_lines=True, draw_sprite=False,
                 # line_batch_name="constraint-lines"
             )
-        super().__init__(**parameters)
+        Graphical.__init__(self, **parameters)
+        PhysicsInterface.__init__(self)
+
         self.a = a
         self.b = b
         self.breaking_impulse = breaking_impulse
@@ -42,6 +45,7 @@ class Constraint(Graphical):
         self._constraint = None
 
     def update(self, dt):
+        super().update(dt)
         true_impulse = self.impulse / dt
 
         if self.breaking_impulse and true_impulse > self.breaking_impulse:

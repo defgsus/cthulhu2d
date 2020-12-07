@@ -3,7 +3,7 @@ import math
 from pymunk import Vec2d
 
 from ..objects.primitives import Box, Trapezoid
-from ..constraints import FixedJoint, PivotAnchorJoint
+from ..objects.constraints import FixedJoint, PivotAnchorJoint
 from .base import AgentBase
 
 
@@ -14,6 +14,7 @@ class Tentacle(AgentBase):
         self.num_segments = num_segments
 
     def update(self, dt):
+        super().update(dt)
         time = self.engine.time
         amount = min(1, time / 3.)
         motor_joints = filter(lambda c: c.user_data and c.user_data.get("motor_sign"), self.constraints)

@@ -1,18 +1,18 @@
-import math
 from typing import List
 
 import pymunk
 from pymunk import Vec2d
-import pyglet
 
 from .graphical import Graphical
+from .physical import PhysicsInterface
 
 
-class Body(Graphical):
+class Body(PhysicsInterface, Graphical):
 
     def __init__(self, position, angle=0, density=0, **parameters):
-        from ..constraints import Constraint
-        super().__init__(**parameters)
+        from .constraints import Constraint
+        Graphical.__init__(self, **parameters)
+        PhysicsInterface.__init__(self)
 
         self.start_position = Vec2d(position)
         self.start_angle = angle
@@ -90,6 +90,7 @@ class Body(Graphical):
         self._body = None
 
     def update(self, dt):
+        super().update(dt)
         if self._body and not self._start_angular_velocity_applied:
             self._body.angular_velocity = self.start_angular_velocity
             self._start_angular_velocity_applied = True

@@ -20,6 +20,7 @@ class Player(Circle):
         self.pick_dir = Vec2d()
 
     def update(self, dt):
+        super().update(dt)
         side_speed = 5
         angular_speed = 10
         max_angular_speed = 20

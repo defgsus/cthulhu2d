@@ -11,7 +11,7 @@ from pymunk import Vec2d
 
 from ..engine import Engine
 from ..objects.primitives import Box
-from ..constraints import FixedJoint
+from ..objects.constraints import FixedJoint
 from ..agents.tentacle import Tentacle
 from ..objects.graphical import GraphicSettings
 from ..image_gen import ImageGeneratorSettings

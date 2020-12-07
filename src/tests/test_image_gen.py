@@ -1,6 +1,6 @@
 import unittest
 
-from src.image_gen import ImageGenerator, ImageGeneratorSettings, RGBAImage
+from ..image_gen import ImageGenerator, ImageGeneratorSettings, RGBAImage
 
 
 class TestImageGen(unittest.TestCase):
