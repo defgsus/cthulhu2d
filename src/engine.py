@@ -17,6 +17,29 @@ from .log import LogMixin
 
 class Engine(LogMixin):
 
+    class TraceHit:
+        def __init__(self, body, position, distance, gradient, num_steps):
+            self.body = body
+            self.position = position
+            self.distance = distance
+            self.gradient = gradient
+            self.num_steps = num_steps
+
+        def __str__(self):
+            return "%s(%s)" % (
+                self.__class__.__name__,
+                ", ".join(
+                    f"{key}={value}"
+                    for key, value in (
+                        ("body", self.body.short_name()),
+                        ("position", self.position),
+                        ("distance", self.distance),
+                        ("gradient", self.gradient),
+                        ("num_steps", self.num_steps),
+                    )
+                )
+            )
+
     def __init__(self):
         self.space = pymunk.Space()
         self.space.gravity = Vec2d(0., -10.)
@@ -92,11 +115,7 @@ class Engine(LogMixin):
         if not hit or not hit.shape:
             return None
 
-        pymunk_body = hit.shape.body
-        body = self.container._pymunk_body_to_body(pymunk_body)
-        if not body:
-            raise AssertionError(f"pymunk body {pymunk_body} not in engine's mapping")
-        return body
+        return self._pymunk_body_to_body(hit.shape.body)
 
     def point_query_body(self, position, max_distance=0, shape_filter=None):
         hit = self.space.point_query(
@@ -109,7 +128,39 @@ class Engine(LogMixin):
         if not hit.shape:
             return None
 
-        pymunk_body = hit.shape.body
+        return self._pymunk_body_to_body(hit.shape.body)
+
+    def trace(self, position, direction, max_steps=1000, min_distance=0.001, max_distance=1e6, shape_filter=None):
+        """
+        Raymarching through the pymunk physics space
+        :param position: tuple, start of ray in world coordinates
+        :param direction: tuple, direction as normalized vector
+        :param max_steps: int, number of maximum steps to reach a surface
+        :param min_distance: float, distance to surface to consider as hit
+        :param max_distance: float, maximum distance to scan for objects
+        :param shape_filter: pymunk.Shapefilter instance or None
+        :return: Engine.TraceHit instance or None
+        """
+        shape_filter = shape_filter or self._empty_shape_filter
+        position = Vec2d(position)
+        direction = Vec2d(direction)
+        for i in range(max_steps):
+            hit = self.space.point_query_nearest(position, max_distance, shape_filter)
+            if not hit:
+                return None
+            # print("H", hit)
+            if hit.distance <= min_distance:
+                return self.TraceHit(
+                    body=self._pymunk_body_to_body(hit.shape.body),
+                    position=position,
+                    distance=hit.distance,
+                    gradient=hit.gradient,
+                    num_steps=i
+                )
+
+            position += direction * hit.distance
+
+    def _pymunk_body_to_body(self, pymunk_body):
         body = self.container._pymunk_body_to_body(pymunk_body)
         if not body:
             raise AssertionError(f"pymunk body {pymunk_body} not in engine's mapping")
@@ -117,29 +168,3 @@ class Engine(LogMixin):
 
     def dump(self, file=None):
         self.container.dump_tree(file=file)
-
-    #def _create_agent_objects(self):
-    #    while self._agents_to_create_objects:
-    #        agent = self._agents_to_create_objects.pop(0)
-    #        agent.create_objects()
-
-    #def _add_to_agent(self, agent: AgentBase, key, obj):
-    #    if not agent:
-    #        return
-    #    if agent not in self._agent_to_objects:
-    #        self._agent_to_objects[agent] = {}
-    #    if key not in self._agent_to_objects[agent]:
-    #        self._agent_to_objects[agent][key] = []
-    #    self._agent_to_objects[agent][key].append(obj)
-
-    #def _remove_from_agent(self, key, obj):
-    #    for agent, objects_per_key in self._agent_to_objects.items():
-    #        if key in objects_per_key:
-    #            objects = objects_per_key[key]
-    #            if obj in objects:
-    #                if key == "body":
-    #                    agent._bodies.remove(obj)
-    #                elif key == "constraint":
-    #                    agent._constraints.remove(obj)
-
-    #                objects.remove(obj)

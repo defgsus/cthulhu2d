@@ -78,6 +78,12 @@ class Body(PhysicsInterface, Graphical):
             return self._body.angle
         return self.start_angle
 
+    @angle.setter
+    def angle(self, v):
+        if self._body:
+            self._body.angle = v
+        self.start_angle = v
+
     @property
     def body(self):
         if self._body is None:
