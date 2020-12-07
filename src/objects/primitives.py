@@ -16,7 +16,7 @@ class Circle(Body):
         self.radius = radius
 
     def iter_points(self):
-        steps = 12
+        steps = 6
         for i in range(steps):
             t = i / steps * math.pi * 2
             yield Vec2d((math.sin(t), math.cos(t))) * self.radius

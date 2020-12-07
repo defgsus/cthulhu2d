@@ -7,25 +7,16 @@ import random
 
 import numpy as np
 
+import pymunk
 from pymunk import Vec2d
 
 from ..engine import Engine
-from ..objects.primitives import Box
-from ..objects.constraints import FixedJoint
+from ..objects.primitives import Body, Box, Circle
+from ..objects.constraints import FixedJoint, SpringJoint
 from ..agents.tentacle import Tentacle
 from ..objects.graphical import GraphicSettings
+from ..objects.container import ObjectContainer
 from ..image_gen import ImageGeneratorSettings
-
-
-def initialize_map(engine: Engine):
-    engine.player.start_position = (0, 5)
-    engine.add_body(
-        Box((0, -5), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
-    )
-    #snake(engine)
-    engine.add_container(Tentacle((10, 0)))
-    engine.add_container(Tentacle((20, 0), speed=2))
-
 
 
 MAPS = [
@@ -76,6 +67,25 @@ MAPS = [
 ]
 
 
+def initialize_map(engine: Engine):
+    engine.player.start_position = (-3, 5)
+    engine.add_body(
+        Box((0, -5), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
+    )
+    top_box = engine.add_body(
+        Box((15, 15), (1, .5), density=0)
+    )
+    stone = engine.add_body(
+        Circle((10, 10), .5, density=10)
+    )
+    #snake(engine)
+    rope(engine, top_box, stone)
+    engine.add_container(Tentacle((10, 0)))
+    engine.add_container(Tentacle((20, 0), speed=2))
+
+
+
+
 def snake(engine: Engine):
     last_box = None
     for i in range(10):
@@ -114,6 +124,30 @@ def density_parade(engine: Engine, pos, num_items=30):
         )
         box.angular_velocity = angular_velocity
         engine.add_body(box)
+
+
+def rope(container: ObjectContainer, body_a: Body, body_b: Body, num_segments=10):
+    direction = (body_b.position - body_a.position).normalized()
+    length = (body_b.position - body_a.position).get_length()
+    bodies = [body_a]
+    pos = Vec2d(body_a.position)
+    for i in range(num_segments + 1):
+        pos += direction * length / (num_segments + 2)
+        if i < num_segments:
+            bodies.append(container.add_body(
+                Circle(
+                    pos, .1, default_shape_filter=pymunk.ShapeFilter(mask=0), density=10,
+                    graphic_settings=GraphicSettings(draw_lines=False)
+                )
+            ))
+        else:
+            bodies.append(body_b)
+
+        if len(bodies) >= 2:
+            container.add_constraint(
+                #FixedJoint(bodies[-2], bodies[-1], (0, 0), (0, 0), breaking_impulse=0)
+                SpringJoint(bodies[-2], bodies[-1], (0, 0), (0, 0), breaking_impulse=0)
+            )
 
 
 def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
