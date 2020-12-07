@@ -11,7 +11,7 @@ from .graphical import Graphical
 class Body(Graphical):
 
     def __init__(self, position, angle=0, density=0, **parameters):
-        from .constraints import Constraint
+        from ..constraints import Constraint
         super().__init__(**parameters)
 
         self.start_position = Vec2d(position)

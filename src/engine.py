@@ -1,14 +1,12 @@
-import math
 from typing import List
 
 import pymunk
 from pymunk import Vec2d
-import pyglet
 
 from .images import Images
 from .renderer import Renderer
-from .body import Body
-from .player import Player
+from .objects.body import Body
+from .objects.player import Player
 from .constraints import Constraint
 from .agents.base import AgentBase
 from .log import LogMixin
@@ -238,14 +236,13 @@ class Engine(LogMixin):
         self._agent_to_objects[agent][key].append(obj)
 
     def _remove_from_agent(self, key, obj):
-        for agent, objects_per_key in self._agent_to_objects:
+        for agent, objects_per_key in self._agent_to_objects.items():
             if key in objects_per_key:
                 objects = objects_per_key[key]
                 if obj in objects:
                     if key == "body":
-                        agent.on_remove_body(obj)
                         agent._bodies.remove(obj)
                     elif key == "constraint":
-                        agent.on_remove_constraint(obj)
                         agent._constraints.remove(obj)
-                objects.remove(obj)
+
+                    objects.remove(obj)

@@ -1,17 +1,20 @@
+"""
+Some testbed for map creation
+"""
+
 import math
 import random
 
 import numpy as np
 
-import pymunk
 from pymunk import Vec2d
 
-from .engine import Engine
-from .primitives import Box, Circle
-from .constraints import FixedJoint
-from .agents.tentacle import Tentacle
-from .graphical import GraphicSettings
-from .image_gen import ImageGeneratorSettings
+from ..engine import Engine
+from ..objects.primitives import Box
+from ..constraints import FixedJoint
+from ..agents.tentacle import Tentacle
+from ..objects.graphical import GraphicSettings
+from ..image_gen import ImageGeneratorSettings
 
 
 def initialize_map(engine: Engine):

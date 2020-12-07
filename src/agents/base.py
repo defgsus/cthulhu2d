@@ -2,8 +2,8 @@ from typing import List
 
 from pymunk import Vec2d
 
-from ..engine_obj import EngineObject
-from ..body import Body
+from ..objects.base import EngineObject
+from ..objects.body import Body
 from ..constraints import Constraint
 
 
@@ -34,7 +34,6 @@ class AgentBase(EngineObject):
             self.engine.remove_body(body)
 
     def add_body(self, body):
-        body.add_callback("remove_body", self.on_remove_body)
         self._bodies.append(body)
         self.engine.add_body(body, agent=self)
         return body
@@ -44,18 +43,10 @@ class AgentBase(EngineObject):
         self._bodies.remove(body)
 
     def add_constraint(self, constraint):
-        constraint.add_callback("remove_constraint", self.on_remove_constraint)
         self._constraints.append(constraint)
         self.engine.add_constraint(constraint, agent=self)
         return constraint
 
     def remove_constraint(self, constraint):
         self.engine.remove_constraint(constraint)
-        self._constraints.remove(constraint)
-        constraint.remove_callback(self.on_remove_constraint)
-
-    def on_remove_body(self, body):
-        self._bodies.remove(body)
-
-    def on_remove_constraint(self, constraint):
         self._constraints.remove(constraint)

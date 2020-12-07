@@ -1,9 +1,9 @@
 import math
 import pyglet
 
-from .engine_obj import EngineObject
-from .parameterized import Parameterized
-from .image_gen import ImageGeneratorSettings
+from ..objects.base import EngineObject
+from ..parameterized import Parameterized
+from ..image_gen import ImageGeneratorSettings
 
 
 class Graphical(EngineObject):
@@ -39,7 +39,6 @@ class Graphical(EngineObject):
 
     def render_graphics(self):
         """Default function renders lines along iter_world_points(), if present"""
-        from .constraints import Constraint
         if hasattr(self, "iter_world_points"):
             if self.graphic_settings.draw_lines:
                 batch: pyglet.graphics.Batch = self.engine.renderer.get_batch(self.graphic_settings.line_batch_name)

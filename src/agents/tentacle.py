@@ -1,10 +1,9 @@
 import math
 
-import pymunk
 from pymunk import Vec2d
 
-from ..primitives import Box, Circle, Trapezoid
-from ..constraints import FixedJoint, SpringJoint, RotaryLimitJoint, PivotAnchorJoint
+from ..objects.primitives import Box, Trapezoid
+from ..constraints import FixedJoint, PivotAnchorJoint
 from .base import AgentBase
 
 

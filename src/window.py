@@ -1,13 +1,12 @@
 import time
 
-import pymunk
 from pymunk import Vec2d
 
 import pyglet
 from pyglet import gl
 
 from .engine import Engine
-from . import map_gen
+from .maps import map_gen
 
 
 class MainWindow(pyglet.window.Window):

@@ -2,8 +2,9 @@ import pymunk
 from pymunk import Vec2d
 
 from .primitives import Circle
-from .keyhandler import KeyHandler
 from .graphical import GraphicSettings
+from ..keyhandler import KeyHandler
+
 
 class Player(Circle):
     def __init__(self, position, **parameters):

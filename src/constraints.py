@@ -1,13 +1,7 @@
-import math
-
 import pymunk
 from pymunk import Vec2d
 
-import pyglet
-from pyglet import gl
-
-from .engine_obj import EngineObject
-from .graphical import Graphical, GraphicSettings
+from .objects.graphical import Graphical, GraphicSettings
 
 
 class Constraint(Graphical):

@@ -1,5 +1,5 @@
 
-from .parameterized import Parameterized
+from ..parameterized import Parameterized
 
 
 class EngineObject(Parameterized):
@@ -17,7 +17,7 @@ class EngineObject(Parameterized):
         }
 
     def __init__(self, user_data=None):
-        from .engine import Engine
+        from ..engine import Engine
         super().__init__()
 
         self._engine: Engine = None
