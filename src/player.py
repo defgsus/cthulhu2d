@@ -8,7 +8,7 @@ from .graphical import GraphicSettings
 class Player(Circle):
     def __init__(self, position, **parameters):
         super().__init__(
-            position=position, radius=.4, density=1,
+            position=position, radius=.4, density=100,
             graphic_settings=GraphicSettings(
                 draw_lines=True, draw_sprite=True,
                 image_name="player1",

@@ -39,6 +39,17 @@ class Renderer:
         else:
             self._batches_disabled.add(name)
 
+    def pixel_to_map(self, pixel_pos):
+        aspect = self.engine.window_size.x / self.engine.window_size.y
+        left = -10 * aspect
+        right = 10 * aspect
+        top = 19
+        bottom = -1
+        return Vec2d(
+            left + pixel_pos[0] / self.engine.window_size[0] * (right - left),
+            bottom + pixel_pos[1] / self.engine.window_size[1] * (top - bottom),
+        ) + self.translation
+
     def render(self):
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glPushMatrix()

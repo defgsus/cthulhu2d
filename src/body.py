@@ -16,11 +16,22 @@ class Body(Graphical):
 
         self.start_position = Vec2d(position)
         self.start_angle = angle
+        self.start_angular_velocity = 0.
         self.density = density
+        self._start_angular_velocity_applied = False
 
         self._body: pymunk.Body = None
         self._shapes: List[pymunk.Shape] = []
         self._constraints: List[Constraint] = []
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "start_position": self.start_position,
+            "start_angle": self.start_angle,
+            "start_angular_velocity": self.start_angular_velocity,
+            "density": self.density,
+        }
 
     @property
     def position(self):
@@ -36,6 +47,18 @@ class Body(Graphical):
         self.start_position = v
 
     @property
+    def angular_velocity(self):
+        if self._body:
+            return self._body.angular_velocity
+        return self.start_angular_velocity
+
+    @angular_velocity.setter
+    def angular_velocity(self, v):
+        if self._body:
+            self._body.angular_velocity = v
+        self.start_angular_velocity = v
+
+    @property
     def angle(self):
         if self._body:
             return self._body.angle
@@ -46,6 +69,12 @@ class Body(Graphical):
         if self._body is None:
             raise ValueError(f"Request of non-existent body. Use {self.__class__.__name__}.create_graphics() first")
         return self._body
+
+    def on_constraint_added(self, constraint):
+        pass
+
+    def on_remove_constraint(self, constraint):
+        pass
 
     def create_physics(self):
         pass
@@ -61,7 +90,9 @@ class Body(Graphical):
         self._body = None
 
     def update(self, dt):
-        pass
+        if self._body and not self._start_angular_velocity_applied:
+            self._body.angular_velocity = self.start_angular_velocity
+            self._start_angular_velocity_applied = True
 
     def add_shape(self, shape: pymunk.Shape):
         """
@@ -78,6 +109,7 @@ class Body(Graphical):
         else:
             self._body = pymunk.Body()
         self._body.position = self.start_position
+        self._body.angle = self.start_angle
         return self._body
 
     def iter_points(self):
@@ -88,4 +120,17 @@ class Body(Graphical):
             yield self.position + p.rotated(self.angle)
 
     def dump(self, file=None):
-        print(f"{self.__class__.__name__}: pos={self.position}, ang={self.angle}", file=file)
+        print(self.__class__.__name__, file=file)
+        params = self.to_dict()
+        for key in sorted(params):
+            value = params[key]
+            print(f"{key:30}: {repr(value)}", file=file)
+        if self._constraints:
+            print("constraints:", file=file)
+            for c in self._constraints:
+                print(" ", c, file=file)
+        else:
+            print("no constraints", file=file)
+
+        #print(f"{self.__class__.__name__}: pos={self.position}, ang={self.angle}", file=file)
+

@@ -11,23 +11,22 @@ from .base import AgentBase
 class Tentacle(AgentBase):
     
     def __init__(self, start_position, num_segments=15, **parameters):
-        super().__init__(start_position=Vec2d(start_position), **parameters)
+        super().__init__(start_position=start_position, **parameters)
         self.num_segments = num_segments
-        self._motors = []
 
     def update(self, dt):
         time = self.engine.time
         amount = min(1, time / 3.)
-        for i, joints in enumerate(self._motors):
-            for j, joint in enumerate(joints):
-                sign = -1 if j < len(joints) // 2 else 1
-                if 0:
-                    expand = joint.original_distance * (1. + sign * math.sin(time + i / self.num_segments * 0))
-                    joint.distance = joint.original_distance + expand * amount / (1 + i)
-                    #joint._constraint.anchor_a = joint._constraint.anchor_a + expand * amount
-                else:
-                    change = math.pow(.5*(1. + sign * math.sin(time)), 3.)
-                    joint.distance = change * joint.original_distance * 3# * change
+        motor_joints = filter(lambda c: c.user_data and c.user_data.get("motor_sign"), self.constraints)
+        for i, joint in enumerate(motor_joints):
+            sign = joint.user_data["motor_sign"]
+            if 0:
+                expand = joint.original_distance * (1. + sign * math.sin(time + i / self.num_segments * 0))
+                joint.distance = joint.original_distance + expand * amount / (1 + i)
+                #joint._constraint.anchor_a = joint._constraint.anchor_a + expand * amount
+            else:
+                change = math.pow(.5*(1. + sign * math.sin(time)), 3.)
+                joint.distance = change * joint.original_distance * 3 * amount# * change
 
     def create_objects(self):
         #hit = self.engine.space.point_query_nearest(
@@ -58,12 +57,10 @@ class Tentacle(AgentBase):
 
             if last_body:
                 if 1:
-                    self._motors.append((
-                        self._tentacle_connect(last_body, body, 0, 0),
-                        #self._tentacle_connect(last_body, body, 0, 1),
-                        self._tentacle_connect(last_body, body, 1, 0),
-                        #self._tentacle_connect(last_body, body, 1, -1),
-                    ))
+                    self._tentacle_connect(last_body, body, 0, 0, user_data={"motor_sign": -1}),
+                    #self._tentacle_connect(last_body, body, 0, 1),
+                    self._tentacle_connect(last_body, body, 1, 0, user_data={"motor_sign": 1}),
+                    #self._tentacle_connect(last_body, body, 1, -1),
                 if 0:
                     # self.add_constraint(RotaryLimitJoint(last_body, body, 0, 1))
                     self.add_constraint(PivotAnchorJoint(
@@ -86,7 +83,7 @@ class Tentacle(AgentBase):
                     )
                 )
 
-    def _tentacle_connect(self, box_a: Box, box_b: Box, corner, bot):
+    def _tentacle_connect(self, box_a: Box, box_b: Box, corner, bot, user_data=None):
         if corner == 0:
             anchor_a = box_a.top_left_extent
             anchor_b = box_b.bottom_left_extent
@@ -96,7 +93,7 @@ class Tentacle(AgentBase):
 
         bot_x = box_a.extent.x * bot * .3
         return self.add_constraint(
-            FixedJoint(box_a, box_b, anchor_a + (bot_x, 0), anchor_b, breaking_impulse=0)
+            FixedJoint(box_a, box_b, anchor_a + (bot_x, 0), anchor_b, breaking_impulse=0, user_data=user_data)
             #SpringJoint(
             #    box_a, box_b, anchor_a + (bot_x, 0), anchor_b,
             #    breaking_impulse=1000,

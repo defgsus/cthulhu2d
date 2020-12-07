@@ -1,5 +1,8 @@
 import time
 
+import pymunk
+from pymunk import Vec2d
+
 import pyglet
 from pyglet import gl
 
@@ -43,6 +46,8 @@ class MainWindow(pyglet.window.Window):
         if ord('1') <= symbol < (ord('1') + len(map_gen.MAPS)):
             pos = self.engine.player.position + (0, 20)
             map_gen.add_from_map(self.engine, map_gen.MAPS[symbol - ord('1')], pos=pos)
+        if symbol == ord('x'):
+            map_gen.density_parade(self.engine, self.engine.player.position)
         if symbol == ord('g'):
             self.do_render = not self.do_render
         if symbol == ord('p'):
@@ -63,6 +68,14 @@ class MainWindow(pyglet.window.Window):
     def on_key_release(self, symbol, modifiers):
         if symbol in self.SYMBOL_TO_PLAYER_KEY:
             self.engine.player.keys.set_key_down(self.SYMBOL_TO_PLAYER_KEY[symbol], False)
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        map_pos = self.engine.renderer.pixel_to_map(Vec2d(x, y))
+        body = self.engine.point_query_body(map_pos)
+        if body:
+            print()
+            body.dump()
+        #print(map_pos, body)
 
     def set_projection(self):
         aspect = self.width / self.height

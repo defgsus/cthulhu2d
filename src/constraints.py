@@ -24,9 +24,6 @@ class Constraint(Graphical):
         self.breaking_impulse = breaking_impulse
         # the pymunk constraint
         self._constraint = None
-        # give bodies access to their constraints
-        self.a._constraints.append(self)
-        self.b._constraints.append(self)
 
     def to_dict(self):
         return {

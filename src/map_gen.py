@@ -89,6 +89,29 @@ def snake(engine: Engine):
         last_box = box
 
 
+def density_parade(engine: Engine, pos, num_items=30):
+    for i in range(num_items):
+
+        extent = (.2, .2)
+        density = i + .1
+        x = i * extent[0] * 3
+        angle = .3
+        angular_velocity = -200.
+
+        graphic_settings = GraphicSettings(
+            draw_lines=True, draw_sprite=True,
+            image_name=ImageGeneratorSettings(
+                color=density_color(density), shape="rect"
+            ),
+        )
+        box = Box(
+            Vec2d(x, 20) + pos, extent, angle=angle,
+            density=density, graphic_settings=graphic_settings,
+        )
+        box.angular_velocity = angular_velocity
+        engine.add_body(box)
+
+
 def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
     if pos is None:
         pos = Vec2d((0, 20))
@@ -96,20 +119,13 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
     MAP = MAP or random.choice(MAPS)
     density = random.uniform(.5, 25) if density is None else density
 
-    density_color_0 = np.array((.7, .7, .7), dtype=np.float)
-    density_color_1 = np.array((1, .3, .1), dtype=np.float)
-    def _density_color(density):
-        s = max(0, min(1, density / 25))
-        c = density_color_0 + s * (density_color_1 - density_color_0)
-        return np.round(c * 10) / 10
-
     boxes = {}
 
     do_multi = False
     def _connect(a, b, anchor_a, anchor_b):
         engine.add_constraint(FixedJoint(a, b, anchor_a, anchor_b, breaking_impulse=500))
 
-    extent = random.uniform(.1, .5)
+    extent = random.uniform(.1, 0.6)
     extent_smaller = 1.
     if random.randrange(5) == 0:
         extent_smaller = 1. - random.uniform(0., random.uniform(0., 1.))
@@ -120,7 +136,7 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
                 graphic_settings = GraphicSettings(
                     draw_lines=True, draw_sprite=True,
                     image_name=ImageGeneratorSettings(
-                        color=_density_color(local_density), shape="rect"
+                        color=density_color(local_density), shape="rect"
                     ),
                 )
                 r = extent * extent_smaller
@@ -146,3 +162,12 @@ def add_from_map(engine: Engine, MAP=None, pos=None, density=None):
                     else:
                         _connect(box, other, (-box.extent.x, -box.extent.y), (other.extent.x, -other.extent.y))
                         _connect(box, other, (-box.extent.x, +box.extent.y), (other.extent.x, +other.extent.y))
+
+
+
+density_color_0 = np.array((.7, .7, .7), dtype=np.float)
+density_color_1 = np.array((1, .3, .1), dtype=np.float)
+def density_color(density):
+    s = max(0, min(1, density / 25))
+    c = density_color_0 + s * (density_color_1 - density_color_0)
+    return np.round(c * 10) / 10
