@@ -9,19 +9,21 @@ from .base import AgentBase
 
 class Tentacle(AgentBase):
     
-    def __init__(self, start_position, num_segments=15, **parameters):
+    def __init__(self, start_position, num_segments=15, speed=1, amount=1, **parameters):
         super().__init__(start_position=start_position, **parameters)
         self.num_segments = num_segments
+        self.speed = speed
+        self.amount = amount
 
     def update(self, dt):
         super().update(dt)
-        time = self.engine.time
-        amount = min(1, time / 3.)
+        time = self.engine.time * self.speed
+        amount = min(1, time / 3.) * self.amount
         motor_joints = filter(lambda c: c.user_data and c.user_data.get("motor_sign"), self.constraints)
-        for i, joint in enumerate(motor_joints):
-            sign = joint.user_data["motor_sign"]
+        for joint in motor_joints:
+            sign, i = joint.user_data["motor_sign"], joint.user_data["index"]
             change = math.pow(.5*(1. + sign * math.sin(time)), 3.)
-            joint.distance = change * joint.original_distance * 3 * amount# * change
+            joint.distance = change * joint.original_distance * 3 * amount
 
     def create_objects(self):
         #hit = self.engine.space.point_query_nearest(
@@ -51,8 +53,8 @@ class Tentacle(AgentBase):
             ))
 
             if last_body:
-                self._tentacle_connect(last_body, body, 0, 0, user_data={"motor_sign": -1}),
-                self._tentacle_connect(last_body, body, 1, 0, user_data={"motor_sign": 1}),
+                self._tentacle_connect(last_body, body, 0, 0, user_data={"motor_sign": -1, "index": i}),
+                self._tentacle_connect(last_body, body, 1, 0, user_data={"motor_sign": 1, "index": i}),
 
             last_body = body
             #angle += .3 * math.sin(i/3.)

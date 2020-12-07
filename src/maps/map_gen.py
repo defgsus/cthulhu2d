@@ -24,6 +24,7 @@ def initialize_map(engine: Engine):
     )
     #snake(engine)
     engine.add_container(Tentacle((10, 0)))
+    engine.add_container(Tentacle((20, 0), speed=2))
 
 
 
