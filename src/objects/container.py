@@ -80,10 +80,6 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
         body.on_engine_attached()
         return body
 
-    def remove_body(self, body):
-        self.log(3, "remove_body", body)
-        self._bodies_to_remove.append(body)
-
     def add_constraint(self, constraint):
         self.log(3, "add_constraint", constraint)
         constraint._parent_container = self
@@ -99,10 +95,6 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             body.on_constraint_added(constraint)
         return constraint
 
-    def remove_constraint(self, constraint):
-        self.log(3, "remove_constraint", constraint)
-        self._constraints_to_remove.append(constraint)
-
     def add_container(self, container):
         self.log(3, "add_container", container)
         container._parent_container = self
@@ -112,9 +104,50 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             self._containers_to_create_objects.append(container)
         return container
 
+    def remove_body(self, body):
+        self.log(3, "remove_body", body)
+        if not self._remove_body_recursive(body):
+            raise ValueError(f"remove_body not successful with {body}")
+
+    def remove_constraint(self, constraint):
+        self.log(3, "remove_constraint", constraint)
+        if not self._remove_constraint_recursive(constraint):
+            raise ValueError(f"remove_constraint on {self.short_name()} not successful with {constraint}\nXX {self.constraints}")
+
     def remove_container(self, container):
         self.log(3, "remove_container", container)
-        self._containers_to_remove.append(container)
+        if not self._remove_container_recursive(container):
+            raise ValueError(f"remove_container not successful with {container}")
+
+    def _remove_body_recursive(self, body):
+        if body in self.bodies:
+            self._bodies_to_remove.append(body)
+            return True
+        else:
+            for c in self.containers:
+                if c._remove_body_recursive(body):
+                    return True
+        return False
+
+    def _remove_constraint_recursive(self, constraint):
+        if constraint in self.constraints:
+            self._constraints_to_remove.append(constraint)
+            return True
+        else:
+            for c in self.containers:
+                if c._remove_constraint_recursive(constraint):
+                    return True
+        return False
+    
+    def _remove_container_recursive(self, container):
+        if container in self.containers:
+            self._containers_to_remove.append(container)
+            return True
+        else:
+            for c in self.containers:
+                if c._remove_container_recursive(container):
+                    return True
+        return False
 
     def iter_objects(self):
         """Yields all contained EngineObject instances"""
