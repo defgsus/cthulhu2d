@@ -6,50 +6,23 @@ from ..objects.physical import PhysicsInterface
 from ..objects.base import EngineObject
 from ..objects.body import Body
 from ..objects.constraints import Constraint
+from ..objects.container import ObjectContainer
 
 
-class AgentBase(PhysicsInterface, EngineObject):
+class AgentBase(ObjectContainer):
 
-    def __init__(self, start_position, **parameters):
-        EngineObject.__init__(self, **parameters)
-        PhysicsInterface.__init__(self)
+    def __init__(self, start_position=(0, 0), **parameters):
+        super().__init__(**parameters)
 
-        self.start_position = Vec2d(start_position)
-        self._bodies: List[Body] = []
-        self._constraints: List[Constraint] = []
+        self._start_position = Vec2d(start_position)
 
     @property
-    def bodies(self):
-        return self._bodies
+    def start_position(self):
+        return self._start_position
 
-    @property
-    def constraints(self):
-        return self._constraints
-
-    def update(self, dt):
-        super().update(dt)
+    @start_position.setter
+    def start_position(self, v):
+        self._start_position = Vec2d(v)
 
     def create_objects(self):
         pass
-
-    def remove_objects(self):
-        for body in self._bodies:
-            self.engine.remove_body(body)
-
-    def add_body(self, body):
-        self._bodies.append(body)
-        self.engine.add_body(body, agent=self)
-        return body
-
-    def remove_body(self, body):
-        self.engine.remove_body(body)
-        self._bodies.remove(body)
-
-    def add_constraint(self, constraint):
-        self._constraints.append(constraint)
-        self.engine.add_constraint(constraint, agent=self)
-        return constraint
-
-    def remove_constraint(self, constraint):
-        self.engine.remove_constraint(constraint)
-        self._constraints.remove(constraint)

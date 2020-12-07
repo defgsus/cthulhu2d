@@ -12,3 +12,8 @@ class PhysicsInterface:
     def update(self, dt):
         self._base_update_called = True
 
+    def create_physics(self):
+        pass
+
+    def destroy_physics(self):
+        pass

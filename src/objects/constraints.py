@@ -36,9 +36,6 @@ class Constraint(PhysicsInterface, Graphical):
             return 0.
         return self._constraint.impulse
 
-    def create_physics(self):
-        raise NotImplementedError
-    
     def destroy_physics(self):
         if self._constraint:
             self.engine.space.remove(self._constraint)

@@ -18,12 +18,12 @@ from ..image_gen import ImageGeneratorSettings
 
 
 def initialize_map(engine: Engine):
-    engine.player.position = (0, 5)
+    engine.player.start_position = (0, 5)
     engine.add_body(
         Box((0, -5), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
     )
     #snake(engine)
-    engine.add_agent(Tentacle((10, 0)))
+    engine.add_container(Tentacle((10, 0)))
 
 
 

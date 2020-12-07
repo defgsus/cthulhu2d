@@ -46,6 +46,18 @@ class Body(PhysicsInterface, Graphical):
             self._body.position = v
         self.start_position = v
 
+
+    @property
+    def velocity(self):
+        if self._body:
+            return self._body.velocity
+        return 0.
+
+    @velocity.setter
+    def velocity(self, v):
+        if self._body:
+            self._body.velocity = v
+
     @property
     def angular_velocity(self):
         if self._body:
@@ -76,17 +88,13 @@ class Body(PhysicsInterface, Graphical):
     def on_remove_constraint(self, constraint):
         pass
 
-    def create_physics(self):
-        pass
-
     def destroy_physics(self):
         for shape in self._shapes:
             self.engine.space.remove(shape)
-
         self._shapes = []
+
         if self._body:
             self.engine.space.remove(self._body)
-
         self._body = None
 
     def update(self, dt):

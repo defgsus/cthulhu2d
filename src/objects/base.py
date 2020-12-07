@@ -22,6 +22,7 @@ class EngineObject(Parameterized):
 
         self._engine: Engine = None
         self._engine_callbacks = dict()
+        self._parent_container = None
         self._user_data = user_data
 
         meta_info = self.engine_object_classes[self.__class__]
@@ -48,6 +49,9 @@ class EngineObject(Parameterized):
     @property
     def user_data(self):
         return self._user_data
+
+    def short_name(self):
+        return f"{self.__class__.__name__}('{self.id}')"
 
     def add_callback(self, name, cb):
         if name not in self._engine_callbacks:

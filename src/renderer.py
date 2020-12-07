@@ -66,8 +66,7 @@ class Renderer:
             gl.glPopMatrix()
 
     def _render_batches(self):
-        for g in self.engine.iter_graphics():
-            g.render_graphics()
+        self.engine.container.render_graphics()
 
         # print(self._batches, self._permanent_batches)
 

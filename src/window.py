@@ -52,7 +52,7 @@ class MainWindow(pyglet.window.Window):
         if symbol == ord('p'):
             self.do_physics = not self.do_physics
         if symbol == ord('d'):
-            #self.engine.dump()
+            self.engine.container.dump_tree()
             self.engine.renderer.set_batch_enabled(
                 "lines", not self.engine.renderer.is_batch_enabled("lines")
             )
