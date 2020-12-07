@@ -51,7 +51,17 @@ class EngineObject(Parameterized):
         return self._user_data
 
     def short_name(self):
-        return f"{self.__class__.__name__}('{self.id}')"
+        has_physics = bool(getattr(self, '_body', None))
+        has_graphics = bool(getattr(self, '_graphics', None))
+        s = f"{self.__class__.__name__}({self.id}"
+        if has_physics or has_graphics:
+            s += ", "
+            if has_physics:
+                s += "P"
+            if has_graphics:
+                s += "G"
+        s += ")"
+        return s
 
     def add_callback(self, name, cb):
         if name not in self._engine_callbacks:

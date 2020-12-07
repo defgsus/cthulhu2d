@@ -54,19 +54,19 @@ class Engine(LogMixin):
         self.renderer.render()
 
     def add_body(self, body: Body):
-        self.container.add_body(body)
+        return self.container.add_body(body)
 
     def remove_body(self, body: Body):
         self.container.remove_body(body)
 
     def add_constraint(self, constraint: Constraint):
-        self.container.add_constraint(constraint)
+        return self.container.add_constraint(constraint)
 
     def remove_constraint(self, constraint: Constraint):
         self.container.remove_constraint(constraint)
 
     def add_container(self, container: ObjectContainer):
-        self.container.add_container(container)
+        return self.container.add_container(container)
 
     def remove_container(self, container: ObjectContainer):
         self.container.remove_container(container)
@@ -116,7 +116,7 @@ class Engine(LogMixin):
         return body
 
     def dump(self, file=None):
-        pass
+        self.container.dump_tree(file=file)
 
     #def _create_agent_objects(self):
     #    while self._agents_to_create_objects:
