@@ -82,6 +82,14 @@ class Body(PhysicsInterface, Graphical):
             raise ValueError(f"Request of non-existent body. Use {self.__class__.__name__}.create_graphics() first")
         return self._body
 
+    def remove(self):
+        """Remove from parent/base container"""
+        if self.engine:
+            if self._parent_container:
+                self._parent_container.remove_body(self)
+            else:
+                self.engine.remove_body(self)
+
     def on_constraint_added(self, constraint):
         pass
 

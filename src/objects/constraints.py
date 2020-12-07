@@ -36,6 +36,14 @@ class Constraint(PhysicsInterface, Graphical):
             return 0.
         return self._constraint.impulse
 
+    def remove(self):
+        """Remove from parent/base container"""
+        if self.engine:
+            if self._parent_container:
+                self._parent_container.remove_constraint(self)
+            else:
+                self.engine.remove_constraint(self)
+
     def destroy_physics(self):
         if self._constraint:
             self.engine.space.remove(self._constraint)

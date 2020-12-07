@@ -107,7 +107,7 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
     def remove_body(self, body):
         self.log(3, "remove_body", body)
         if not self._remove_body_recursive(body):
-            raise ValueError(f"remove_body not successful with {body}")
+            raise ValueError(f"remove_body on {self.short_name()} not successful with {body}")
 
     def remove_constraint(self, constraint):
         self.log(3, "remove_constraint", constraint)
@@ -117,7 +117,7 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
     def remove_container(self, container):
         self.log(3, "remove_container", container)
         if not self._remove_container_recursive(container):
-            raise ValueError(f"remove_container not successful with {container}")
+            raise ValueError(f"remove_container on {self.short_name()} not successful with {container}")
 
     def _remove_body_recursive(self, body):
         if body in self.bodies:
@@ -211,13 +211,13 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             body = self._bodies_to_remove.pop(0)
 
             body.fire_callback("remove_body", body)
-            # self._remove_from_agent("body", body)
 
             for constraint in body._constraints:
-                self.remove_constraint(constraint)
-            self.bodies.remove(body)
+                constraint.remove()
 
+            self.bodies.remove(body)
             self._pymunk_body_to_body_dict.pop(body._body, None)
+
             self._physics_to_destroy.append(body)
             self._graphics_to_destroy.append(body)
 
@@ -226,7 +226,6 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             constraint = self._constraints_to_remove.pop(0)
 
             constraint.fire_callback("remove_constraint", constraint)
-            # self._remove_from_agent("constraint", constraint)
 
             for body in (constraint.a, constraint.b):
                 if constraint in body._constraints:
