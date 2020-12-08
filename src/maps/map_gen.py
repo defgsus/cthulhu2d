@@ -17,6 +17,7 @@ from ..agents.tentacle import Tentacle
 from ..objects.graphical import GraphicSettings
 from ..objects.container import ObjectContainer
 from ..image_gen import ImageGeneratorSettings
+from .rand import RandomXY
 
 
 MAPS = [
@@ -68,6 +69,15 @@ MAPS = [
 
 
 def initialize_map(engine: Engine):
+    random_surroundings(engine, (-30, -20), (30, 20))
+    engine.player.start_position = (0, 10)
+
+    engine.add_body(
+        Box((0, -30), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
+    )
+
+
+def initialize_map_2(engine: Engine):
     engine.player.start_position = (-3, 5)
     engine.add_body(
         Box((0, -5), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
@@ -209,3 +219,37 @@ def density_color(density):
     s = max(0, min(1, density / 25))
     c = density_color_0 + s * (density_color_1 - density_color_0)
     return np.round(c * 10) / 10
+
+
+def random_surroundings(container, top_left, bottom_right, noise_range=(0, .5), scale=(1, 1), noise_scale=(.2, .2)):
+    extent = Vec2d(scale) * .49
+    rnd = RandomXY(1)
+    for y in range(top_left[1], bottom_right[1]):
+        for x in range(top_left[0], bottom_right[0]):
+            n = rnd.fractal_noise(x * noise_scale[0], y * noise_scale[1])
+            x = x * scale[0]
+            y = y * scale[1]
+            if noise_range[0] <= n <= noise_range[1]:
+                density = 0
+                if rnd.random(x, y, 23) < .4:
+                    density = 10
+
+                color = np.array((n, n, n), dtype=np.float)
+                color = np.power(color, (1.2, 1.21, 1.22))
+                if density:
+                    color = np.power(color, (1, 1.5, 1))
+                color = (color - noise_range[0]) / (noise_range[1] - noise_range[0])
+                color = .8 - .6 * color
+                color = np.round(color * 10) / 10
+                sprite_settings = GraphicSettings(
+                    draw_lines=True,
+                    draw_sprite=True,
+                    image_name=ImageGeneratorSettings(
+                        shape="rect",
+                        color=color,
+                    )
+                )
+                body = Box((x, y), extent, density=density, graphic_settings=sprite_settings)
+
+                container.add_body(body)
+

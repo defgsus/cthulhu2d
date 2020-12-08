@@ -72,7 +72,10 @@ class Engine(LogMixin):
         self.time += dt
 
     def render(self, dt: float):
-        self.renderer.translation += (self.player.position * (1, 0) - self.renderer.translation) * dt
+        center_pos = self.player.position + (0, -5)
+        player_distance_pos = self.player.position + (0, -10)
+        speed = .5 + .3 * (player_distance_pos - self.renderer.translation).get_length()
+        self.renderer.translation += (center_pos - self.renderer.translation) * speed * dt
         self.container.update_graphics(dt)
         self.renderer.render()
 
