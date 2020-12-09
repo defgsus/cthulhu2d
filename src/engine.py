@@ -12,6 +12,9 @@ from .objects.physical import PhysicsInterface
 from .objects.container import ObjectContainer
 from .agents.base import AgentBase
 from .agents.player import Player
+from .agents.player2 import Player2
+from .agents.player3 import Player3
+from .agents.player4 import Player4
 from .log import LogMixin
 
 
@@ -50,7 +53,7 @@ class Engine(LogMixin):
         self.container._engine = self
         self._empty_shape_filter = pymunk.ShapeFilter()
         self._window_size = Vec2d((320, 200))
-        self.player = Player((0, 1))
+        self.player = Player4((0, 1))
         self.add_container(self.player)
 
     @property

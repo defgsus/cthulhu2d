@@ -175,20 +175,87 @@ class SpringJoint(Constraint):
         self.engine.space.add(constraint)
 
 
-class RotaryLimitJoint(Constraint):
+class RotarySpringJoint(Constraint):
 
-    def __init__(self, a, b, min, max, **parameters):
+    def __init__(self, a, b, anchor_a, anchor_b, rest_angle, stiffness=1000, damping=10, **parameters):
         super().__init__(a, b, **parameters)
-        self.min = min
-        self.max = max
+        self.anchor_a = Vec2d(anchor_a)
+        self.anchor_b = Vec2d(anchor_b)
+        self._rest_angle = rest_angle
+        self.original_rest_angle = rest_angle
+        self.stiffness = stiffness
+        self.damping = damping
 
     def to_dict(self):
         return {
             **super().to_dict(),
-            "min": self.min,
-            "max": self.max,
+            "anchor_a": self.anchor_a,
+            "anchor_b": self.anchor_b,
+            "stiffness": self.stiffness,
+            "damping": self.damping,
+            "rest_angle": self.rest_angle,
         }
 
+    @property
+    def rest_angle(self):
+        return self._rest_angle
+
+    @rest_angle.setter
+    def rest_angle(self, v):
+        self._rest_angle = v
+        if self._constraint:
+            self._constraint.rest_angle = v
+
+    def create_physics(self):
+        constraint = pymunk.DampedRotarySpring(
+            self.a.body, self.b.body,
+            rest_angle=self.rest_angle,
+            stiffness=self.stiffness,
+            damping=self.damping,
+        )
+
+        self._constraint = constraint
+        self.engine.space.add(constraint)
+
+
+class RotaryLimitJoint(Constraint):
+
+    def __init__(self, a, b, min, max, **parameters):
+        super().__init__(a, b, **parameters)
+        self._min = min
+        self._max = max
+
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "min": self._min,
+            "max": self._max,
+        }
+
+    @property
+    def min(self):
+        if self._constraint:
+            return self._constraint.min
+        return self._min
+
+    @min.setter
+    def min(self, v):
+        if self._constraint:
+            self._constraint.min = v
+        self._min = v
+
+    @property
+    def max(self):
+        if self._constraint:
+            return self._constraint.max
+        return self._max
+
+    @max.setter
+    def max(self, v):
+        if self._constraint:
+            self._constraint.max = v
+        self._max = v
+    
     def create_physics(self):
         constraint = pymunk.RotaryLimitJoint(
             self.a.body, self.b.body,

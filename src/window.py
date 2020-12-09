@@ -18,6 +18,7 @@ class MainWindow(pyglet.window.Window):
         65364: "down",
         32: "pick",
         65293: "put",
+        115: "shoot",
     }
 
     def __init__(self, size=None):
@@ -30,7 +31,7 @@ class MainWindow(pyglet.window.Window):
         #from .engine_obj import EngineObject
         #print(EngineObject.engine_object_classes)
         #exit()
-        map_gen.initialize_map(self.engine)
+        map_gen.initialize_map_2(self.engine)
 
         self.do_render = True
         self.do_physics = True

@@ -50,6 +50,16 @@ class EngineObject(Parameterized):
     def user_data(self):
         return self._user_data
 
+    def has_user_data(self, key):
+        """Check that user_data is a dict and that key is in there"""
+        return isinstance(self._user_data, dict) and key in self._user_data
+
+    def get_user_data(self, key, default=None):
+        """Return key from user_data if it's a dict"""
+        if not isinstance(self._user_data, dict):
+            return default
+        return self._user_data.get(key)
+
     def short_name(self):
         has_physics = bool(getattr(self, '_body', None))
         has_graphics = bool(getattr(self, '_graphics', None))

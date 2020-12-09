@@ -1,19 +1,23 @@
+import math
+
 import pymunk
 from pymunk import Vec2d
 
 from .base import AgentBase
 from ..objects.primitives import Box, Circle, Ngon
 from ..objects.graphical import GraphicSettings
+from ..objects import constraints
 from ..keyhandler import KeyHandler
 
 
-class Player(AgentBase):
+class Player4(AgentBase):
     def __init__(self, start_position, **parameters):
         super().__init__(start_position=start_position, **parameters)
 
         self.keys = KeyHandler()
         self.pick_dir = Vec2d()
         self.shape_filter = pymunk.ShapeFilter(categories=0b1, mask=pymunk.ShapeFilter.ALL_MASKS ^ 0b1)
+        self.sequence_index = 0.
 
     @property
     def position(self):
@@ -22,20 +26,48 @@ class Player(AgentBase):
         return self.start_position
 
     def create_objects(self):
-        body = Ngon(
-            position=self.start_position, radius=.4, segments=5,
-            density=50,
-            graphic_settings=GraphicSettings(
-                draw_lines=True, #draw_sprite=True,
-                image_name="player1",
-            ),
-            default_shape_filter=self.shape_filter,
+        steps = 100
+        self.walk_sequence = tuple(
+            Vec2d(math.sin(i/steps*math.pi*2), math.cos(i/steps*math.pi*2)) * Vec2d(.5, .5) + (0, -.4)
+            for i in range(steps)
         )
-        self.add_body(body)
+        self.reference_points = (
+            Vec2d(-.4, .1),
+            #Vec2d(0, .4),
+            Vec2d(.4, .1),
+        )
+        self.reference_distance_sequences = tuple(
+            tuple(
+                (seq_point - ref_point).get_length()
+                for seq_point in self.walk_sequence
+            )
+            for ref_point in self.reference_points
+        )
+        body = self.add_body(Circle(
+            position=self.start_position, radius=.5, #segments=5,
+            density=10,
+            default_shape_filter=self.shape_filter,
+        ))
+        for sign, offset in ((-1, 0.), (1, .5)):
+            foot = self.add_body(Ngon(position=self.start_position + (sign*.3, -.38), radius=.2, segments=3, density=100))
+            for i, ref_point in enumerate(self.reference_points):
+                self.add_constraint(constraints.SpringJoint(
+                    body, foot, ref_point, (0, 0), user_data={"ref_point": i, "offset": offset},
+                    stiffness=10000
+                ))
+
+    def run_walk_sequence(self, dt):
+        for c in filter(lambda c: c.has_user_data("ref_point"), self.constraints):
+            ref_distance_sequence = self.reference_distance_sequences[c.user_data["ref_point"]]
+            seq_index = int((self.sequence_index + c.user_data["offset"]) * len(self.walk_sequence)) % len(self.walk_sequence)
+            c.rest_length = ref_distance_sequence[seq_index]
+
+        self.sequence_index += dt
 
     def update(self, dt):
         super().update(dt)
-        
+        self.run_walk_sequence(dt)
+
         body = self.bodies[0]
         
         side_speed = 5

@@ -31,6 +31,29 @@ class Circle(Body):
         sprite.scale *= self.radius * 2. / sprite.width
 
 
+class Ngon(Body):
+
+    def __init__(self, position, radius, segments, **parameters):
+        super().__init__(position=position, **parameters)
+        assert segments > 0, f"Can not use segment < 1 in {self}"
+        self.radius = radius
+        self.segments = segments
+
+    def iter_points(self):
+        for i in range(self.segments):
+            t = i / self.segments * math.pi * 2
+            yield Vec2d((math.sin(t), math.cos(t))) * self.radius
+
+    def create_physics(self):
+        shape = pymunk.Poly(self._create_body(), list(self.iter_points()))
+        self.add_shape(shape)
+
+        self.engine.space.add(self._body, shape)
+
+    def on_sprite_created(self, sprite):
+        sprite.scale *= self.radius * 2. / sprite.width
+
+
 class Box(Body):
 
     def __init__(self, position, extent, angle=0., **parameters):

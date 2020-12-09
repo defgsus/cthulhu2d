@@ -9,7 +9,7 @@ from .physical import PhysicsInterface
 
 class Body(PhysicsInterface, Graphical):
 
-    def __init__(self, position, angle=0, density=0, default_shape_filter=None, **parameters):
+    def __init__(self, position, angle=0, density=0, velocity=(0, 0), default_shape_filter=None, **parameters):
         from .constraints import Constraint
         Graphical.__init__(self, **parameters)
         PhysicsInterface.__init__(self)
@@ -20,6 +20,7 @@ class Body(PhysicsInterface, Graphical):
         self.density = density
         self._start_angular_velocity_applied = False
         self._default_shape_filter = default_shape_filter
+        self._start_velocity = Vec2d(velocity)
 
         self._body: pymunk.Body = None
         self._shapes: List[pymunk.Shape] = []
@@ -48,17 +49,17 @@ class Body(PhysicsInterface, Graphical):
             self._body.position = v
         self.start_position = v
 
-
     @property
     def velocity(self):
         if self._body:
             return self._body.velocity
-        return 0.
+        return self._start_velocity
 
     @velocity.setter
     def velocity(self, v):
         if self._body:
             self._body.velocity = v
+        self._start_velocity = v
 
     @property
     def angular_velocity(self):
@@ -117,6 +118,7 @@ class Body(PhysicsInterface, Graphical):
         super().update(dt)
         if self._body and not self._start_angular_velocity_applied:
             self._body.angular_velocity = self.start_angular_velocity
+            self._body.velocity = self._start_velocity
             self._start_angular_velocity_applied = True
 
     def add_shape(self, shape: pymunk.Shape):
