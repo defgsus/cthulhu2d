@@ -15,6 +15,7 @@ class Renderer:
         self._batches = {}
         self._batches_disabled = set()
         self.translation = Vec2d()
+        self.scale = 4.
 
     def get_permanent_batch(self, name):
         if name in self._batches_disabled:
@@ -41,10 +42,10 @@ class Renderer:
 
     def pixel_to_map(self, pixel_pos):
         aspect = self.engine.window_size.x / self.engine.window_size.y
-        left = -10 * aspect
-        right = 10 * aspect
-        top = 19
-        bottom = -1
+        left = -self.scale * aspect
+        right = self.scale * aspect
+        top = self.scale
+        bottom = -self.scale
         return Vec2d(
             left + pixel_pos[0] / self.engine.window_size[0] * (right - left),
             bottom + pixel_pos[1] / self.engine.window_size[1] * (top - bottom),
@@ -56,9 +57,9 @@ class Renderer:
         try:
             gl.glLoadIdentity()
             aspect = self.engine.window_size.x / self.engine.window_size.y
-            gl.glOrtho(-10*aspect, 10*aspect, -1, 19, -1, 1)
+            gl.glOrtho(-self.scale*aspect, self.scale*aspect, -self.scale, self.scale, -1, 1)
 
-            gl.glTranslatef(-self.translation.x, -self.translation.y, 0)
+            gl.glTranslatef(-self.translation.x, -self.translation.y - .5*self.scale, 0)
 
             self._render_batches()
 

@@ -1,5 +1,11 @@
-import math
+"""
+Some interesting reads:
 
+    https://robotics.ee.uwa.edu.au/theses/2006-Biped-Sutherland-PhD.pdf
+
+    http://ruina.tam.cornell.edu/research/topics/locomotion_and_robotics/simplest_walking/simplest_walking.pdf
+
+"""
 import pymunk
 from pymunk import Vec2d
 
@@ -10,16 +16,13 @@ from ..objects import constraints
 from ..keyhandler import KeyHandler
 
 
-class Player4(AgentBase):
+class InvertedPendulum(AgentBase):
     def __init__(self, start_position, **parameters):
         super().__init__(start_position=start_position, **parameters)
 
         self.keys = KeyHandler()
         self.pick_dir = Vec2d()
         self.shape_filter = pymunk.ShapeFilter(categories=0b1, mask=pymunk.ShapeFilter.ALL_MASKS ^ 0b1)
-        self.sequence_index = 0.
-        self.sequence_speed = 0.
-        self.sequence_add = 0.
 
     @property
     def position(self):
@@ -28,74 +31,49 @@ class Player4(AgentBase):
         return self.start_position
 
     def create_objects(self):
-        self.reference_points = (
-            Vec2d(-.4, -.1),
-            # Vec2d(0, .4),
-            Vec2d(.4, -.1),
-        )
-        body = self.add_body(Ngon(
-            position=self.start_position, radius=.5, segments=5,
-            density=10,
-            default_shape_filter=self.shape_filter,
+        body = self.add_body(Box(
+            position=self.start_position + (0, .15), extent=(.3, .05),
+            density=1, default_shape_filter=self.shape_filter,
         ))
-        for sign, offset in ((-1, 0.), (1, .51)):
-            foot = self.add_body(Ngon(
-                position=self.start_position + (sign*.3, -.38), radius=.2, segments=3, density=100,
-                friction=5.,
-                default_shape_filter=self.shape_filter,
+        for sign in (-1, 1):
+            wheel = self.add_body(Circle(
+                position=self.start_position + (sign*.2, .1), radius=.1,
+                density=1, default_shape_filter=self.shape_filter
             ))
-            self.add_constraint(constraints.RotaryLimitJoint(
-                body, foot, -.1, .1
+            self.add_constraint(constraints.FixedJoint(
+                body, wheel, (sign*.2, -.05), (0, 0)
             ))
-            for i, ref_point in enumerate(self.reference_points):
-                self.add_constraint(constraints.FixedJoint(
-                    body, foot, ref_point, (0, 0), user_data={"ref_point": ref_point, "offset": offset},
-                ))
 
-    def get_walk_sequence(self, t):
-        exag = self.keys.smooth_down("left") + self.keys.smooth_down("right")
-        body = self.bodies[0]
-        r = (t + .25) * math.pi * 2
-        r += math.sin(r*2)
-        circle = Vec2d(math.sin(r), math.cos(r))
-        foot = circle * Vec2d(.4, .15) + (0, -.4)
-        foot.x *= 1. + exag
-        foot.rotate(body.angle)
-        foot.y = max(foot.y, -.4)
-        foot.rotate(-body.angle)
-        return foot
-
-    def run_walk_sequence(self, dt):
-        for c in filter(lambda c: c.has_user_data("ref_point"), self.constraints):
-            ref_point = c.user_data["ref_point"]
-            seq_point = self.get_walk_sequence(self.sequence_index + c.user_data["offset"])
-            c.distance = (seq_point - ref_point).get_length()
-
-        if self.sequence_add > 0.:
-            self.sequence_index += self.sequence_add * dt
-            self.sequence_add -= dt
-
-    def walk(self, dt, speed):
-        self.sequence_speed = speed
-        self.sequence_add = 1
-        #self.sequence_index += dt * speed / 3
+        pendulum = self.add_body(Circle(
+            position=self.start_position + (0, 1.), radius=0.05,
+            density=1, default_shape_filter=self.shape_filter
+        ))
+        self.add_constraint(constraints.FixedJoint(
+            body, pendulum, (0, .05), (0, 0)
+        ))
 
     def update(self, dt):
         super().update(dt)
-        self.run_walk_sequence(dt)
-
+        
         body = self.bodies[0]
         
+        side_speed = 5
+        angular_speed = 10
+        max_angular_speed = 20
         pick_dir = Vec2d(0, 0)
-        if self.keys.is_pressed("left"):
+        if self.keys.is_down("left"):
             pick_dir.x = -1
             speed = 1 + 3 * self.keys.smooth_down("left") + 6 * self.keys.smooth_pressed("left")
-            self.walk(dt, -speed)
+            body.velocity += (-dt * side_speed * speed, 0)
+            if body.angular_velocity < max_angular_speed:
+                body.angular_velocity += dt * angular_speed * speed
 
-        if self.keys.is_pressed("right"):
+        if self.keys.is_down("right"):
             pick_dir.x = 1
             speed = 1 + 3 * self.keys.smooth_down("right") + 6 * self.keys.smooth_pressed("right")
-            self.walk(dt, speed)
+            body.velocity -= (-dt * side_speed * speed, 0)
+            if body.angular_velocity > -max_angular_speed:
+                body.angular_velocity -= dt * angular_speed * speed
 
         if self.keys.is_pressed("up"):
             pick_dir.y = 1

@@ -68,7 +68,7 @@ class Tentacle(AgentBase):
                         ground_body, self.bodies[0],
                         ground_query_pos - ground_body.position + ofs,
                         Vec2d(0, -self.bodies[0].extent.y) + ofs,
-                        breaking_impulse=0,
+                        breaking_impulse=10000,
                     )
                 )
 
@@ -82,7 +82,7 @@ class Tentacle(AgentBase):
 
         bot_x = box_a.extent.x * bot * .3
         return self.add_constraint(
-            FixedJoint(box_a, box_b, anchor_a + (bot_x, 0), anchor_b, breaking_impulse=0, user_data=user_data)
+            FixedJoint(box_a, box_b, anchor_a + (bot_x, 0), anchor_b, breaking_impulse=10000, user_data=user_data)
             #SpringJoint(
             #    box_a, box_b, anchor_a + (bot_x, 0), anchor_b,
             #    breaking_impulse=1000,

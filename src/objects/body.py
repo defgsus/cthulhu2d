@@ -9,7 +9,7 @@ from .physical import PhysicsInterface
 
 class Body(PhysicsInterface, Graphical):
 
-    def __init__(self, position, angle=0, density=0, velocity=(0, 0), default_shape_filter=None, **parameters):
+    def __init__(self, position, angle=0, density=0, velocity=(0, 0), friction=1., default_shape_filter=None, **parameters):
         from .constraints import Constraint
         Graphical.__init__(self, **parameters)
         PhysicsInterface.__init__(self)
@@ -18,6 +18,7 @@ class Body(PhysicsInterface, Graphical):
         self.start_angle = angle
         self.start_angular_velocity = 0.
         self.density = density
+        self._friction = friction
         self._start_angular_velocity_applied = False
         self._default_shape_filter = default_shape_filter
         self._start_velocity = Vec2d(velocity)
@@ -86,6 +87,22 @@ class Body(PhysicsInterface, Graphical):
         self.start_angle = v
 
     @property
+    def friction(self):
+        return self._friction
+
+    @friction.setter
+    def friction(self, v):
+        self.friction = v
+        for s in self._shapes:
+            s.friction = v
+
+    @property
+    def kinetic_energy(self):
+        if self._body:
+            return self._body.kinetic_energy
+        return 0.
+
+    @property
     def body(self):
         if self._body is None:
             raise ValueError(f"Request of non-existent body. Use {self.__class__.__name__}.create_graphics() first")
@@ -127,7 +144,8 @@ class Body(PhysicsInterface, Graphical):
         To be called within create_physics()
         """
         shape.density = self.density
-        shape.friction = 1.
+        shape.friction = self._friction
+        # shape.elasticity = .5
         if self._default_shape_filter:
             shape.filter = self._default_shape_filter
         self._shapes.append(shape)

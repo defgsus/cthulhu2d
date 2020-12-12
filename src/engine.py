@@ -15,6 +15,8 @@ from .agents.player import Player
 from .agents.player2 import Player2
 from .agents.player3 import Player3
 from .agents.player4 import Player4
+from .agents.pendulum import InvertedPendulum
+from .agents.player5 import Player5
 from .log import LogMixin
 
 
@@ -53,7 +55,7 @@ class Engine(LogMixin):
         self.container._engine = self
         self._empty_shape_filter = pymunk.ShapeFilter()
         self._window_size = Vec2d((320, 200))
-        self.player = Player4((0, 1))
+        self.player = Player5((0, 1))
         self.add_container(self.player)
 
     @property
@@ -65,20 +67,21 @@ class Engine(LogMixin):
         self._window_size = Vec2d(v)
 
     def update(self, dt, fixed_dt=None):
-        self.container.update(dt)
 
         pymunk_steps = 10
         pymunk_dt = (fixed_dt or dt) / pymunk_steps
         for i in range(pymunk_steps):
             self.space.step(pymunk_dt)
+            self.container.update(pymunk_dt)
 
         self.time += dt
 
     def render(self, dt: float):
-        center_pos = self.player.position + (0, -5)
-        player_distance_pos = self.player.position + (0, -10)
+        center_pos = self.player.position + (0, 0)
+        player_distance_pos = self.player.position + (0, 10)
         speed = .5 + .3 * (player_distance_pos - self.renderer.translation).get_length()
         self.renderer.translation += (center_pos - self.renderer.translation) * speed * dt
+        #self.renderer.scale += (1. + 5.*speed - self.renderer.scale) * speed * dt
         self.container.update_graphics(dt)
         self.renderer.render()
 
@@ -99,19 +102,6 @@ class Engine(LogMixin):
 
     def remove_container(self, container: ObjectContainer):
         self.container.remove_container(container)
-
-    #def add_agent(self, agent: AgentBase):
-    #    self.log(3, "add_agent", agent)
-    #    agent._engine = self
-    #    self.agents.append(agent)
-    #    self._agents_to_create_objects.append(agent)
-
-    #def remove_agent(self, agent: AgentBase):
-    #    self.log(3, "remove_agent", agent)
-    #    agent.remove_objects()
-    #    self.agents.remove(agent)
-    #    agent._engine = None
-    #    self._agent_to_objects.pop(agent, None)
 
     def point_query_nearest_body(self, position, max_distance=0, shape_filter=None):
         hit = self.space.point_query_nearest(

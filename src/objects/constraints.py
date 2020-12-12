@@ -20,7 +20,7 @@ class Constraint(PhysicsInterface, Graphical):
         self.b = b
         self.breaking_impulse = breaking_impulse
         # the pymunk constraint
-        self._constraint = None
+        self._constraint: pymunk.Constraint = None
 
     def to_dict(self):
         return {
