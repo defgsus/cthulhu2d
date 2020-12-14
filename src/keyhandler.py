@@ -30,7 +30,10 @@ class KeyHandler:
             self.keys[key] = {
                 "smooth_down": 0.,
                 "smooth_pressed": 0.,
+                "changes": 0,
             }
+        if bool(self.keys[key].get("down")) != down:
+            self.keys[key]["changes"] += 1
         self.keys[key].update({
             "down": 1 if down else 0,
             "pressed": down,
@@ -38,12 +41,18 @@ class KeyHandler:
 
     def update(self, dt):
         for key, dic in self.keys.items():
-            dic["smooth_down"] += min(1, dt * 20) * (dic["down"] - dic["smooth_down"])
+            dic["smooth_down"] += min(1, dt * 2) * (dic["down"] - dic["smooth_down"])
             if dic["smooth_down"] < 0.001:
                 dic["smooth_down"] = 0.
 
-            dic["smooth_pressed"] += min(1, dt * 20) * (dic["pressed"] - dic["smooth_pressed"])
+            dic["smooth_pressed"] += min(1, dt * 2) * (dic["pressed"] - dic["smooth_pressed"])
             if dic["smooth_pressed"] < 0.001:
                 dic["smooth_pressed"] = 0.
 
             dic["pressed"] = False
+
+    def changes(self, key):
+        return self.keys.get(key, {}).get("changes", 0)
+
+    def keys_down(self):
+        return tuple(key for key in self.keys if self.is_down(key))

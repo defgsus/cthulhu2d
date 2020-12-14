@@ -46,6 +46,16 @@ class TestContainer(unittest.TestCase):
 
         self.assertHasPhysicsBody(box, sub_box, sub_sub_box, sub_sub_box_2)
         self.assertHasGraphics(box, sub_box, sub_sub_box, sub_sub_box_2)
+        self.assertEqual(4, len(engine.space.bodies))
+
+        engine.remove_container(sub_cont)
+        #engine.remove_body(sub_box)
+
+        engine.update(1/60)
+        engine.render(1/60)
+        engine.dump()
+
+        self.assertEqual(1, len(engine.space.bodies))
 
 
 if __name__ == '__main__':

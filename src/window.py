@@ -8,6 +8,13 @@ from pyglet import gl
 from .engine import Engine
 from .maps import map_gen
 
+from .agents.player2 import Player2
+from .agents.player3 import Player3
+from .agents.player4 import Player4
+from .agents.pendulum import InvertedPendulum
+from .agents.player5 import Player5
+from .agents.player6 import Player6
+
 
 class MainWindow(pyglet.window.Window):
 
@@ -28,13 +35,14 @@ class MainWindow(pyglet.window.Window):
             super().__init__(fullscreen=True)
         self.fps_display = pyglet.window.FPSDisplay(self)
         self.engine = Engine()
-        #from .engine_obj import EngineObject
-        #print(EngineObject.engine_object_classes)
-        #exit()
+
+        self.engine.player = Player6((0, 1))
+        self.engine.add_container(self.engine.player)
         map_gen.initialize_map_2(self.engine)
 
         self.do_render = True
         self.do_physics = True
+        self.do_print_sensors = False
         self._last_render_time = time.time()
 
     def on_key_press(self, symbol, modifiers):
@@ -52,6 +60,8 @@ class MainWindow(pyglet.window.Window):
             self.do_render = not self.do_render
         if symbol == ord('p'):
             self.do_physics = not self.do_physics
+        if symbol == ord('s'):
+            self.do_print_sensors = not self.do_print_sensors
         if symbol == ord('d'):
             self.engine.container.dump_tree()
             self.engine.renderer.set_batch_enabled(
@@ -99,6 +109,8 @@ class MainWindow(pyglet.window.Window):
         # print(dt)
         if self.do_physics:
             self.engine.update(dt)
+            if self.do_print_sensors and hasattr(self.engine.player, "dump_sensors"):
+                self.engine.player.dump_sensors(dt)
 
 
 if __name__ == "__main__":

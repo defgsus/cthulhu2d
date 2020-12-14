@@ -31,13 +31,28 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
         self._constraints_to_remove = []
         self._containers_to_remove = []
         self._containers_to_create_objects = []
+        self._containers_to_destroy_physics = []
+        self._containers_to_destroy_graphics = []
 
     def update(self, dt):
+        # self.log(4, "UPDATE", self)
         super().update(dt)
+
+        #if self._containers_to_destroy_physics:
+        #    print("TO_DESTROY", self, self._containers_to_destroy_physics)
+        for c in self._containers_to_destroy_physics:
+            c.update(dt)
+            c._remove_bodies()
+            c._remove_constraints()
+            c._remove_containers()
+            c.update(dt)
+            c._destroy_physics()
+        self._containers_to_destroy_physics.clear()
 
         for i in range(2):
             self._remove_bodies()
             self._remove_constraints()
+            self._remove_containers()
             self._destroy_physics()
             self._create_physics()
             self._create_container_objects()
@@ -206,6 +221,10 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             self.log(4, "destroy_graphics:", obj)
             obj.destroy_graphics()
 
+        while self._containers_to_destroy_graphics:
+            c = self._containers_to_destroy_graphics.pop(0)
+            c._destroy_graphics()
+
     def _remove_bodies(self):
         while self._bodies_to_remove:
             body = self._bodies_to_remove.pop(0)
@@ -215,7 +234,8 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             for constraint in body._constraints:
                 constraint.remove()
 
-            self.bodies.remove(body)
+            if body in self.bodies:
+                self.bodies.remove(body)
             self._pymunk_body_to_body_dict.pop(body._body, None)
 
             self._physics_to_destroy.append(body)
@@ -232,7 +252,9 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
                     body._constraints.remove(constraint)
             for body in (constraint.a, constraint.b):
                 body.on_remove_constraint(constraint)
-            self.constraints.remove(constraint)
+
+            if constraint in self.constraints:
+                self.constraints.remove(constraint)
 
             self._physics_to_destroy.append(constraint)
             self._graphics_to_destroy.append(constraint)
@@ -241,6 +263,32 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
         while self._containers_to_create_objects:
             container = self._containers_to_create_objects.pop(0)
             container.create_objects()
+
+    def _remove_containers(self):
+        while self._containers_to_remove:
+            container: ObjectContainer = self._containers_to_remove.pop(0)
+            for c in container.containers:
+                container.remove_container(c)
+            # container.containers.clear()
+            for c in container.constraints:
+                container.remove_constraint(c)
+            # container.constraints.clear()
+            for b in container.bodies:
+                container.remove_body(b)
+            # container.bodies.clear()
+
+            if container in self.containers:
+                self.containers.remove(container)
+
+            self._containers_to_destroy_physics.append(container)
+            self._containers_to_destroy_graphics.append(container)
+            if 0:
+                self._bodies_to_remove += container._bodies_to_remove
+                self._constraints_to_remove += container._constraints_to_remove
+                self._physics_to_destroy += container._physics_to_destroy
+                self._graphics_to_destroy += container._graphics_to_destroy
+
+            #print("DES", self._bodies_to_remove)
 
     def dump_tree(self, indent="", file=None):
         print(f"{indent}{self.short_name()}")

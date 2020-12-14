@@ -2,7 +2,7 @@
 
 class LogMixin:
 
-    LOG_LEVEL = 4
+    LOG_LEVEL = 0
 
     def log(self, *args):
         if args:
