@@ -110,6 +110,10 @@ class Body(PhysicsInterface, Graphical):
         return 0.
 
     @property
+    def mass(self):
+        return sum((shape.mass for shape in self._shapes), 0.)
+
+    @property
     def body(self):
         if self._body is None:
             raise ValueError(f"Request of non-existent body. Use {self.__class__.__name__}.create_graphics() first")

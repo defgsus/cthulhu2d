@@ -1,4 +1,6 @@
 from typing import List
+import math
+import random
 
 import pymunk
 from pymunk import Vec2d, Arbiter
@@ -12,6 +14,7 @@ from .objects.physical import PhysicsInterface
 from .objects.container import ObjectContainer
 from .agents.base import AgentBase
 from .agents.player import Player
+from .agents.particles import Particles
 from .log import LogMixin
 
 
@@ -51,7 +54,9 @@ class Engine(LogMixin):
         self._empty_shape_filter = pymunk.ShapeFilter()
         self._window_size = Vec2d((320, 200))
         self.player = None
+        self._ignore_collisions = set()
         self._install_collision_handler()
+        self.particles = self.add_container(Particles())
 
     @property
     def window_size(self):
@@ -157,13 +162,28 @@ class Engine(LogMixin):
     def _install_collision_handler(self):
         handler = self.space.add_collision_handler(0, 0)
         handler.begin = self._collision_begin
+        handler.post_solve = self._collision_post_solve
 
     def _collision_begin(self, arbiter: Arbiter, space, data):
-        #print(arbiter, arbiter.shapes[0]._parent_body, data)
+        shapes = arbiter.shapes
+        body_a = shapes[0]._parent_body
+        body_b = shapes[1]._parent_body
+        key = (body_a, body_b)
+        if key in self._ignore_collisions:
+            self._ignore_collisions.remove(key)
+        return True
+
+    def _collision_post_solve(self, arbiter: Arbiter, space, data):
         shapes = arbiter.shapes
         body_a = shapes[0]._parent_body
         body_b = shapes[1]._parent_body
         # print(f"COLLISION {body_a} <-> {body_b}", arbiter.total_impulse, arbiter.total_ke)
+
+        key = (body_a, body_b)
+        if key in self._ignore_collisions:
+            return True
+
+        self._ignore_collisions.add(key)
 
         accept = True
         accept = accept and body_a.on_collision(body_b, arbiter)
@@ -173,3 +193,29 @@ class Engine(LogMixin):
             accept = accept and c.on_collision(body_a, body_b, arbiter)
 
         return accept
+
+    def add_particles(
+            self,
+            position,
+            num=10,
+            min_angle=0,
+            max_angle=360,
+            min_velocity=1,
+            max_velocity=10,
+            min_radius=0.02,
+            max_radius=0.13,
+            min_lifetime=3,
+            max_lifetime=4,
+            shape_filter=None,
+    ):
+        for i in range(num):
+            angle = math.radians(random.uniform(min_angle, max_angle))
+            velocity = Vec2d(math.sin(angle), math.cos(angle))
+            velocity *= random.uniform(min_velocity, max_velocity)
+            self.particles.add_particle(
+                position=position,
+                velocity=velocity,
+                radius=random.uniform(min_radius, max_radius),
+                lifetime=random.uniform(min_lifetime, max_lifetime),
+                shape_filter=shape_filter,
+            )

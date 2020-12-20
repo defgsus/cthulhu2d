@@ -5,6 +5,7 @@ from .base import AgentBase
 from ..objects.primitives import Box, Circle, Ngon
 from ..objects.graphical import GraphicSettings
 from ..keyhandler import KeyHandler
+from ..util import dump_object
 
 
 class Player(AgentBase):
@@ -15,6 +16,7 @@ class Player(AgentBase):
         self.pick_dir = Vec2d()
         self.shape_filter = pymunk.ShapeFilter(categories=0b1, mask=pymunk.ShapeFilter.ALL_MASKS ^ 0b1)
         self.radius = .4
+        self.picked_bodies = []
 
     @property
     def position(self):
@@ -82,12 +84,18 @@ class Player(AgentBase):
         self.keys.update(dt)
 
     def has_foot_contact(self):
-        ground = self.engine.trace(
-            self.position, (0, -1), max_steps=20, min_distance=.02, max_distance=1., shape_filter=self.shape_filter
-        )
-        #if ground:
-        #    print((self.position - ground.position).length)
-        return ground and (self.position - ground.position).length <= self.radius
+        for offset in (
+                (0, 0), (-self.radius, 0), (self.radius, 0)
+        ):
+            ground = self.engine.trace(
+                self.position + offset, direction=(0, -1),
+                max_steps=20, min_distance=.02, max_distance=1., shape_filter=self.shape_filter
+            )
+            #if ground:
+            #    print((self.position - ground.position).length)
+            if ground and (self.position - ground.position).length <= self.radius * 1.2:
+                return True
+        return False
 
     def jump(self, dt):
         body = self.bodies[0]
@@ -101,14 +109,18 @@ class Player(AgentBase):
         other_body = self.engine.point_query_nearest_body(pick_pos)
         if other_body and other_body.pickable:
             self.engine.remove_body(other_body)
+            self.picked_bodies.append(other_body)
 
     def put(self, dir):
         body = self.bodies[0]
-
         put_pos = body.position + dir
-        self.engine.add_body(
-            Box(put_pos, (.5, .5), density=10)
-        )
+
+        if self.picked_bodies:
+            body = self.picked_bodies.pop(-1)
+            body.position = put_pos
+            if not body.density:
+                body.density = 1.
+            self.engine.add_body(body)
 
     def shoot(self, dir):
         bullet = self.add_body(Ngon(
@@ -120,8 +132,27 @@ class Player(AgentBase):
         bullet.velocity = dir * 100
 
     def on_collision(self, a, b, arbiter: pymunk.Arbiter):
+        body = b if a in self.bodies else a
+        body_type = body.get_user_data("type")
+
+        #if body_type == "stone":
+        if arbiter.total_impulse.y > 20.:
+            mass = body.mass
+            if mass:
+                self.engine.add_particles(
+                    self.position + (0, self.radius*.7),
+                    num=max(10, int(arbiter.total_impulse.length / 4.)),
+                    shape_filter=self.shape_filter
+                )
+
+            print(f"COLLISION {a} <-> {b}")
+            dump_object(arbiter)
+            #print("mass", body.mass)
+
+        #if body_type == "sand":
+        #    self.engine.remove_body(body)
+
         return True
-        print(f"COLLISION {a} <-> {b}", arbiter.total_impulse, arbiter.total_ke)
         for key in dir(arbiter):
             if not key.startswith("_"):
                 print(f"{key:20} = {getattr(arbiter, key)}")

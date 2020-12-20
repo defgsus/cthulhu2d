@@ -90,6 +90,7 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
 
     def add_body(self, body):
         self.log(3, "add_body", body)
+        assert isinstance(body, Body)
         body._parent_container = self
         body._engine = self.engine
         self.bodies.append(body)
@@ -101,6 +102,7 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
 
     def add_constraint(self, constraint):
         self.log(3, "add_constraint", constraint)
+        assert isinstance(constraint, Constraint)
         constraint._parent_container = self
         constraint._engine = self.engine
         self.constraints.append(constraint)
@@ -116,6 +118,7 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
 
     def add_container(self, container):
         self.log(3, "add_container", container)
+        assert isinstance(container, ObjectContainer)
         container._parent_container = self
         container._engine = self.engine
         self.containers.append(container)
