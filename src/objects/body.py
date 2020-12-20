@@ -9,7 +9,13 @@ from .physical import PhysicsInterface
 
 class Body(PhysicsInterface, Graphical):
 
-    def __init__(self, position, angle=0, density=0, velocity=(0, 0), friction=1., default_shape_filter=None, **parameters):
+    def __init__(
+            self,
+            position, angle=0, density=0, velocity=(0, 0), friction=1.,
+            default_shape_filter=None,
+            pickable=False,
+            **parameters
+    ):
         from .constraints import Constraint
         Graphical.__init__(self, **parameters)
         PhysicsInterface.__init__(self)
@@ -17,6 +23,7 @@ class Body(PhysicsInterface, Graphical):
         self.start_position = Vec2d(position)
         self.start_angle = angle
         self.start_angular_velocity = 0.
+        self.pickable = pickable
         self.density = density
         self._friction = friction
         self._start_angular_velocity_applied = False

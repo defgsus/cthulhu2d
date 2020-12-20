@@ -14,6 +14,7 @@ class Player(AgentBase):
         self.keys = KeyHandler()
         self.pick_dir = Vec2d()
         self.shape_filter = pymunk.ShapeFilter(categories=0b1, mask=pymunk.ShapeFilter.ALL_MASKS ^ 0b1)
+        self.radius = .4
 
     @property
     def position(self):
@@ -23,7 +24,7 @@ class Player(AgentBase):
 
     def create_objects(self):
         body = Ngon(
-            position=self.start_position, radius=.4, segments=5,
+            position=self.start_position, radius=self.radius, segments=5,
             density=50,
             graphic_settings=GraphicSettings(
                 draw_lines=True, #draw_sprite=True,
@@ -37,7 +38,8 @@ class Player(AgentBase):
         super().update(dt)
         
         body = self.bodies[0]
-        
+        # print(self.has_foot_contact())
+
         side_speed = 5
         angular_speed = 10
         max_angular_speed = 20
@@ -58,7 +60,7 @@ class Player(AgentBase):
 
         if self.keys.is_pressed("up"):
             pick_dir.y = 1
-            body.velocity += (0, 10)
+            self.jump(dt)
 
         if self.keys.is_pressed("down"):
             pick_dir.y = -1
@@ -79,12 +81,25 @@ class Player(AgentBase):
 
         self.keys.update(dt)
 
+    def has_foot_contact(self):
+        ground = self.engine.trace(
+            self.position, (0, -1), max_steps=20, min_distance=.02, max_distance=1., shape_filter=self.shape_filter
+        )
+        #if ground:
+        #    print((self.position - ground.position).length)
+        return ground and (self.position - ground.position).length <= self.radius
+
+    def jump(self, dt):
+        body = self.bodies[0]
+        if self.has_foot_contact(): #body.kinetic_energy < 100:
+            body.velocity += (0, 10)
+
     def pick(self, dir):
         body = self.bodies[0]
         pick_pos = body.position + dir
 
         other_body = self.engine.point_query_nearest_body(pick_pos)
-        if other_body and other_body.density:
+        if other_body and other_body.pickable:
             self.engine.remove_body(other_body)
 
     def put(self, dir):
@@ -105,6 +120,7 @@ class Player(AgentBase):
         bullet.velocity = dir * 100
 
     def on_collision(self, a, b, arbiter: pymunk.Arbiter):
+        return True
         print(f"COLLISION {a} <-> {b}", arbiter.total_impulse, arbiter.total_ke)
         for key in dir(arbiter):
             if not key.startswith("_"):

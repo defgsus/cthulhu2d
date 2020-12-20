@@ -24,12 +24,12 @@ MAP1 = """
 # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # . . . d d d s . . . . . . . . . . . . . . . . . . #
 # . d . . . . s . . . . . . . . . . . . . . . . . . #
-# d d d . . . s . . . . . . . . . . . . . . . . . . #
+# d d d . . . . s . . . . . . . . . . . . . . . . . #
 # # # # # # # # . . . . . . . . . . . . . . . . . . #
 # . . . . . . . . . . . . . . . . . . . . . . . . . #
-# . . . . . . . . . . . . . . . . . . . . . . . . . #
-# . . . . . . . . . . . . . . . . . . . . . . . . . #
-# . . . . . . . . . . . . . . . . . . . . . . . . . #
+# . . . . s s s s . . . . . . . . . . . . . . . . . #
+# . . . . s d d s . . . . . . . . . . . . . . . . . #
+# . . . . s s s s . . . . . . . . . . . . . . . . . #
 # . . . . . . . . . . . . . . . . . . . . . . . . . #
 #                                                   #
 #                                                   #
@@ -52,6 +52,7 @@ def char_to_object(char, x, y):
         return Box(
             (x+.5, y+.5), (.5, .5),
             density=0,
+            pickable=True,
             graphic_settings=GraphicSettings(
                 draw_sprite=True,
                 image_name=ImageGeneratorSettings(color=(.6, .3, .0))
@@ -60,7 +61,8 @@ def char_to_object(char, x, y):
     if char == "d":
         return Ngon(
             (x+.5, y+.5), radius=.5, segments=6,
-            density=1,
+            density=5,
+            pickable=True,
             graphic_settings=GraphicSettings(
                 #draw_sprite=True,
                 #image_name=ImageGeneratorSettings(color=(.7, .7, .7))
@@ -69,6 +71,7 @@ def char_to_object(char, x, y):
     if char == "s":
         return Circle(
             (x+.5, y+.5), .5,
+            density=20,
             graphic_settings=GraphicSettings(
                 draw_sprite=True, draw_lines=False,
                 image_name=ImageGeneratorSettings(shape="circle", color=(.6, .6, .6))
