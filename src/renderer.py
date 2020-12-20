@@ -15,7 +15,7 @@ class Renderer:
         self._batches = {}
         self._batches_disabled = set()
         self.translation = Vec2d()
-        self.scale = 4.
+        self.scale = 8.
 
     def get_permanent_batch(self, name):
         if name in self._batches_disabled:

@@ -6,7 +6,7 @@ import pyglet
 from pyglet import gl
 
 from .engine import Engine
-from .maps import map_gen
+from .maps import map_gen, bd_map
 
 from .agents.player import Player
 
@@ -33,7 +33,8 @@ class MainWindow(pyglet.window.Window):
 
         self.engine.player = Player((0, 1))
         self.engine.add_container(self.engine.player)
-        map_gen.initialize_map_2(self.engine)
+        #map_gen.initialize_map_2(self.engine)
+        bd_map.initialize_map(self.engine)
 
         self.do_render = True
         self.do_physics = True
