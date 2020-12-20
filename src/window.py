@@ -8,12 +8,7 @@ from pyglet import gl
 from .engine import Engine
 from .maps import map_gen
 
-from .agents.player2 import Player2
-from .agents.player3 import Player3
-from .agents.player4 import Player4
-from .agents.pendulum import InvertedPendulum
-from .agents.player5 import Player5
-from .agents.player6 import Player6
+from .agents.player import Player
 
 
 class MainWindow(pyglet.window.Window):
@@ -36,7 +31,7 @@ class MainWindow(pyglet.window.Window):
         self.fps_display = pyglet.window.FPSDisplay(self)
         self.engine = Engine()
 
-        self.engine.player = Player6((0, 1))
+        self.engine.player = Player((0, 1))
         self.engine.add_container(self.engine.player)
         map_gen.initialize_map_2(self.engine)
 
