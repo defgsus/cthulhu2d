@@ -153,3 +153,23 @@ class Engine(LogMixin):
 
     def dump(self, file=None):
         self.container.dump_tree(file=file)
+
+    def _install_collision_handler(self):
+        handler = self.space.add_collision_handler(0, 0)
+        handler.begin = self._collision_begin
+
+    def _collision_begin(self, arbiter: Arbiter, space, data):
+        #print(arbiter, arbiter.shapes[0]._parent_body, data)
+        shapes = arbiter.shapes
+        body_a = shapes[0]._parent_body
+        body_b = shapes[1]._parent_body
+        # print(f"COLLISION {body_a} <-> {body_b}", arbiter.total_impulse, arbiter.total_ke)
+
+        accept = True
+        accept = accept and body_a.on_collision(body_b, arbiter)
+        accept = accept and body_b.on_collision(body_a, arbiter)
+        containers = {body_a._parent_container, body_b._parent_container}
+        for c in containers:
+            accept = accept and c.on_collision(body_a, body_b, arbiter)
+
+        return accept

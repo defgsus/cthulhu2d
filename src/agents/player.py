@@ -103,3 +103,10 @@ class Player(AgentBase):
         ))
         bullet.angular_velocity = 100.
         bullet.velocity = dir * 100
+
+    def on_collision(self, a, b, arbiter: pymunk.Arbiter):
+        print(f"COLLISION {a} <-> {b}", arbiter.total_impulse, arbiter.total_ke)
+        for key in dir(arbiter):
+            if not key.startswith("_"):
+                print(f"{key:20} = {getattr(arbiter, key)}")
+        return True

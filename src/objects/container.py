@@ -1,5 +1,7 @@
 from typing import List
 
+import pymunk
+
 from .base import EngineObject
 from .physical import PhysicsInterface
 from .graphical import Graphical
@@ -32,6 +34,9 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
         self._containers_to_create_objects = []
         self._containers_to_destroy_physics = []
         self._containers_to_destroy_graphics = []
+
+    def on_collision(self, a: Body, b: Body, arbiter: pymunk.Arbiter):
+        return True
 
     def update(self, dt):
         # self.log(4, "UPDATE", self)

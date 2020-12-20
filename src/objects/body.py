@@ -116,6 +116,9 @@ class Body(PhysicsInterface, Graphical):
             else:
                 self.engine.remove_body(self)
 
+    def on_collision(self, body, arbiter: pymunk.Arbiter):
+        return True
+
     def on_constraint_added(self, constraint):
         pass
 
