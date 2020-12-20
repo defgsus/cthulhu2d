@@ -14,6 +14,7 @@ from ..engine import Engine
 from ..objects.primitives import Body, Box, Circle, Ngon
 from ..objects.constraints import FixedJoint, SpringJoint
 from ..agents.tentacle import Tentacle
+from ..agents.lemming import Lemming
 from ..objects.graphical import GraphicSettings
 from ..objects.container import ObjectContainer
 from ..image_gen import ImageGeneratorSettings
@@ -22,18 +23,18 @@ from .rand import RandomXY
 
 MAP1 = """
 # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# . . . d d d s . . . . . . . . . . . . . . . . . . #
-# . d . . . . s . . . . . . . . . . . . . . . . . . #
-# d d d . . . . s . . . . . . . . . . . . . . . . . #
-# # # # # # # # . . . . . . . . . . . . . . . . . . #
-# . . . . . . . . . . . . . . . . . . . . . . . . . #
-# . . . . s s s s . . . . . . . . . . . . . . . . . #
-# . . . . s d d s . . . . . . . . . . . . . . . . . #
-# . . . . s s s s . . . . . . . . . . . . . . . . . #
-# . . . . . . . . . . . . . . . . . . . . . . . . . #
-#                                                   #
-#                                                   #
-#       P                                           #
+# . . . d d d s . . .   s . . . . . . . . . . . . . #
+# . d . . . . s . . .   s   . . l                 . #
+# d d d . . . . s . . s s s . . . . . . . . . . . . #
+# # # # # # # # . . . # # # . . .               l . #
+# . .     l . . . . . . . . .   . . . . . . . . . . #
+# . .   . s s s s . . . . .     . . . . . . . . . . #
+# . .   . s d d s . . . .       . . . . . . . . . . #
+# .       s s s s . . .       # # # # . . . . . . . #
+# . . . . . . . . . .       # . . . . . . . . . . . #
+#                         #         d               #
+#                       #         d d d             #
+#       P             #       l d d d d d           #
 # # # # # # # # # # # # # # # # # # # # # # # # # # #
 """
 
@@ -56,7 +57,8 @@ def char_to_object(char, x, y):
             graphic_settings=GraphicSettings(
                 draw_sprite=True,
                 image_name=ImageGeneratorSettings(color=(.6, .3, .0))
-            )
+            ),
+            user_data={"type": "sand"}
         )
     if char == "d":
         return Ngon(
@@ -66,16 +68,22 @@ def char_to_object(char, x, y):
             graphic_settings=GraphicSettings(
                 #draw_sprite=True,
                 #image_name=ImageGeneratorSettings(color=(.7, .7, .7))
-            )
+            ),
+            user_data={"type": "diamond"}
         )
     if char == "s":
         return Circle(
-            (x+.5, y+.5), .5,
+            (x+.5, y+.5), .495,
             density=20,
             graphic_settings=GraphicSettings(
                 draw_sprite=True, draw_lines=False,
                 image_name=ImageGeneratorSettings(shape="circle", color=(.6, .6, .6))
-            )
+            ),
+            user_data={"type": "stone"}
+        )
+    if char == "l":
+        return Lemming(
+            (x+.5, y+.5),
         )
     raise NotImplementedError(f"No object defined for character '{char}'")
 
@@ -95,6 +103,11 @@ def initialize_map(engine: Engine, map_str=None):
                     engine.player.start_position = (x+.5, y+.5)
                 else:
                     obj = char_to_object(char, x, y)
-                    container.add_body(obj)
+                    if isinstance(obj, Body):
+                        container.add_body(obj)
+                    elif isinstance(obj, ObjectContainer):
+                        container.add_container(obj)
+                    else:
+                        raise NotImplementedError(obj)
 
 
