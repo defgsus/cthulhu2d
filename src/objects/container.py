@@ -22,7 +22,6 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
         self.bodies: List[Body] = []
         self.constraints: List[Constraint] = []
         self.containers: List[ObjectContainer] = []
-        self._pymunk_body_to_body_dict = {}
         self._physics_to_create = []
         self._physics_to_destroy = []
         self._graphics_to_create = []
@@ -183,22 +182,12 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             if isinstance(o, PhysicsInterface):
                 yield o
 
-    def _pymunk_body_to_body(self, pymunk_body):
-        if pymunk_body in self._pymunk_body_to_body_dict:
-            return self._pymunk_body_to_body_dict[pymunk_body]
-
-        for sub in self.containers:
-            body = sub._pymunk_body_to_body(pymunk_body)
-            if body:
-                return body
-
     def _create_physics(self):
         while self._physics_to_create:
             obj = self._physics_to_create.pop(0)
             self.log(4, "create_physics:", obj)
             obj.create_physics()
             if isinstance(obj, Body):
-                self._pymunk_body_to_body_dict[obj._body] = obj
                 obj._start_angular_velocity_applied = False
 
     def _destroy_physics(self):
@@ -236,7 +225,6 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
 
             if body in self.bodies:
                 self.bodies.remove(body)
-            self._pymunk_body_to_body_dict.pop(body._body, None)
 
             self._physics_to_destroy.append(body)
             self._graphics_to_destroy.append(body)
@@ -269,26 +257,16 @@ class ObjectContainer(PhysicsInterface, Graphical, LogMixin):
             container: ObjectContainer = self._containers_to_remove.pop(0)
             for c in container.containers:
                 container.remove_container(c)
-            # container.containers.clear()
             for c in container.constraints:
                 container.remove_constraint(c)
-            # container.constraints.clear()
             for b in container.bodies:
                 container.remove_body(b)
-            # container.bodies.clear()
 
             if container in self.containers:
                 self.containers.remove(container)
 
             self._containers_to_destroy_physics.append(container)
             self._containers_to_destroy_graphics.append(container)
-            if 0:
-                self._bodies_to_remove += container._bodies_to_remove
-                self._constraints_to_remove += container._constraints_to_remove
-                self._physics_to_destroy += container._physics_to_destroy
-                self._graphics_to_destroy += container._graphics_to_destroy
-
-            #print("DES", self._bodies_to_remove)
 
     def dump_tree(self, indent="", file=None):
         print(f"{indent}{self.short_name()}")

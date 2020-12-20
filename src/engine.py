@@ -1,7 +1,7 @@
 from typing import List
 
 import pymunk
-from pymunk import Vec2d
+from pymunk import Vec2d, Arbiter
 
 from .images import Images
 from .renderer import Renderer
@@ -51,6 +51,7 @@ class Engine(LogMixin):
         self._empty_shape_filter = pymunk.ShapeFilter()
         self._window_size = Vec2d((320, 200))
         self.player = None
+        self._install_collision_handler()
 
     @property
     def window_size(self):
@@ -105,7 +106,7 @@ class Engine(LogMixin):
         if not hit or not hit.shape:
             return None
 
-        return self._pymunk_body_to_body(hit.shape.body)
+        return hit.shape._parent_body
 
     def point_query_body(self, position, max_distance=0, shape_filter=None):
         hit = self.space.point_query(
@@ -118,7 +119,7 @@ class Engine(LogMixin):
         if not hit.shape:
             return None
 
-        return self._pymunk_body_to_body(hit.shape.body)
+        return hit.shape._parent_body
 
     def trace(self, position, direction, max_steps=1000, min_distance=0.001, max_distance=1e6, shape_filter=None):
         """
@@ -141,7 +142,7 @@ class Engine(LogMixin):
             # print("H", hit)
             if hit.distance <= min_distance:
                 return self.TraceHit(
-                    body=self._pymunk_body_to_body(hit.shape.body),
+                    body=hit.shape._parent_body,
                     position=position,
                     distance=hit.distance,
                     gradient=hit.gradient,
@@ -149,12 +150,6 @@ class Engine(LogMixin):
                 )
 
             position += direction * hit.distance
-
-    def _pymunk_body_to_body(self, pymunk_body):
-        body = self.container._pymunk_body_to_body(pymunk_body)
-        if not body:
-            raise AssertionError(f"pymunk body {pymunk_body} not in engine's mapping")
-        return body
 
     def dump(self, file=None):
         self.container.dump_tree(file=file)

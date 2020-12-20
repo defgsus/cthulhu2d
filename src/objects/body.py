@@ -143,6 +143,7 @@ class Body(PhysicsInterface, Graphical):
         Add a pymunk Shape object.
         To be called within create_physics()
         """
+        shape._parent_body = self
         shape.density = self.density
         shape.friction = self._friction
         # shape.elasticity = .5
