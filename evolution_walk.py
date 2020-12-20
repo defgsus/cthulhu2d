@@ -5,16 +5,18 @@ from tqdm import tqdm
 
 from pymunk import Vec2d
 
-from src.evo.polynomial import Polynomial, print_curve
-from src.evo.pool import Pool, Phenotype
+from src.evo.polynomial import Polynomial
+from src.evo.pool import Pool, Phenotype, PhenotypeStatistics
 from src.evo.params import FloatParameters, ParametersGroup
 from src.agents.player6 import AgentBase, Player6
 from src.engine import Engine
 from src.objects.primitives import Box
 from src.util.timer import Timer
+from src.util.textplot import print_curve
+from src.maps.map_gen import random_heightfield
 
 
-class Stats:
+class Stats(PhenotypeStatistics):
     def __init__(self):
         self.num_frames = 0
         self.seconds = 0.
@@ -31,18 +33,6 @@ class Stats:
         self.max_foot_distance = 0.
         self.max_speed = 0.
         self._speed_sum = 0.
-
-    def __str__(self):
-        rows = []
-        for key in dir(self):
-            if not key.startswith("_"):
-                attr = getattr(self, key)
-                if not callable(attr):
-                    rows.append((key, attr))
-        return "\n".join(
-            f"%s = %s" % row
-            for row in rows
-        )
 
     @property
     def ratio_body_too_low(self):
@@ -104,7 +94,8 @@ class WalkerPhenotype(Phenotype):
         self.obj.set_evo_parameters(self._parameters_to_apply)
 
     def start_trial(self):
-        self.obj = self.AgentClass(**self.init_kwargs)
+        start_pos = (self.pool.rnd.uniform(-20, 20), 1)
+        self.obj = self.AgentClass(**self.init_kwargs, start_position=start_pos)
         if self._parameters_to_apply:
             self._apply_parameters()
             self._parameters_to_apply = None
@@ -114,7 +105,7 @@ class WalkerPhenotype(Phenotype):
         self.stats.start_position = self.obj.position
 
     def finish_trial(self):
-        print("STOP", self.obj, self.obj.position)
+        # print("STOP", self.obj, self.obj.position)
         self.pool.engine.remove_container(self.obj)
 
     def update_stats(self, dt):
@@ -191,6 +182,9 @@ class WalkerPhenotype(Phenotype):
 
         penalty += 20. * pow(self.stats.normalized_travelled_wrong_x, 2)
 
+        if self.stats.average_speed >= 4. or self.stats.max_speed > 5.:
+            penalty += 1000.
+
         fitness = 10. * self.stats.normalized_travelled_correct_x
 
         fitness += self.stats.average_speed
@@ -204,9 +198,8 @@ class EnginePool(Pool):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.engine = Engine()
-        self.engine.add_body(
-            Box((0, -1), (100000, 1))
-        )
+        #self.engine.add_body(Box((0, -1), (100000, 1)))
+        self.engine.add_body(random_heightfield())
 
     def print_num_bodies(self):
         print("Engine bodies", len(self.engine.container.bodies), "pymunk", len(self.engine.space.bodies))
@@ -302,11 +295,11 @@ class EnginePool(Pool):
         return seq
 
 
-if __name__ == "__main__":
+def main():
     # print(Stats()); exit()
     pool = EnginePool(
         max_population=30,
-        mutation_prob=0.1,
+        mutation_prob=0.2,
     )
     max_mutation_amount = .5
     
@@ -314,26 +307,31 @@ if __name__ == "__main__":
     #    print(row)
     #exit()
     for i in range(pool.max_population):
-        pool.add_phenotype(WalkerPhenotype(Player6, start_position=(0, 1)))
+        pool.add_phenotype(WalkerPhenotype(Player6))
 
     # pool.randomize_all(1, 1)
 
-    num_steps = 100
+    num_steps = 1000
     with Timer(num_steps) as timer:
         try:
             for i in tqdm(range(num_steps)):
                 pool.mutation_amount = max_mutation_amount * (1. - i / num_steps)
                 pool.step()
-                print(f"--- gen {i+1} / mut {pool.mutation_amount} ---")
-                pool.dump()
+                print(f"--- gen {i+1} / pool '{pool.pool_id}' / mut {round(pool.mutation_amount, 5)} ---")
+                #pool.dump()
         except KeyboardInterrupt:
             # pool.evaluate()
             print()
     #pool.evaluate()
     pool.dump_snapshot()
     print()
-    pool.snapshot[0]["parameters"].save_json("best.json")
+    #pool.snapshot[0]["parameters"].save_json("best.json")
     #pool.phenotypes[0].obj.dump()
+    print(f"\n best phenotype in {pool.generations}. generation:")
     print(pool.phenotypes[0].get_parameters())
+    print(f"pool_id '{pool.pool_id}'")
     timer.print()
 
+
+if __name__ == "__main__":
+    main()

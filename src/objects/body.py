@@ -149,6 +149,7 @@ class Body(PhysicsInterface, Graphical):
         if self._default_shape_filter:
             shape.filter = self._default_shape_filter
         self._shapes.append(shape)
+        return shape
 
     def _create_body(self):
         if not self.density:

@@ -1,6 +1,8 @@
 import os
 import json
 import warnings
+import hashlib
+
 
 PROJECT_DIR = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -21,22 +23,27 @@ class ParametersBase:
     def randomize(self, rnd, prob, amount):
         raise NotImplementedError
 
-    def to_dict(self):
+    def to_dict(self, with_meta=False):
         raise NotImplementedError
 
-    def to_bytes(self):
+    def to_bytes(self, precision=None):
         raise NotImplementedError
 
     def from_dict(self, data):
         raise NotImplementedError
 
     @classmethod
-    def float_to_bytes(cls, f):
-        s = str(round(f, 3)).encode("ascii")
+    def float_to_bytes(cls, f, precision=None):
+        if precision:
+            f = round(f, precision)
+        s = str(f).encode("ascii")
         return s
 
+    def to_hash(self):
+        return hashlib.md5(self.to_bytes()).hexdigest()
+
     def to_name(self):
-        seq = self.to_bytes()
+        seq = self.to_bytes(precision=3)
         s = 0
         name = []
         break_point = 301
@@ -65,16 +72,21 @@ class FloatParameters(ParametersBase):
     def copy(self):
         return self.__class__(self.values, min=self.min, max=self.max)
 
-    def to_dict(self):
-        return {"values": self.values, "min": self.min, "max": self.max}
+    def to_dict(self, with_meta=False):
+        d = {"values": self.values}
+        if with_meta:
+            d.update({"min": self.min, "max": self.max})
+        return d
 
-    def to_bytes(self):
-        return b"".join(self.float_to_bytes(f) for f in self.values)
+    def to_bytes(self, precision=None):
+        return b"".join(self.float_to_bytes(f, precision) for f in self.values)
 
     def from_dict(self, data):
         self.values = data["values"]
-        self.min = data["min"]
-        self.max = data["max"]
+        if "min" in data:
+            self.min = data["min"]
+        if "max" in data:
+            self.max = data["max"]
 
     def randomize(self, rnd, prob, amount):
         for i, v in enumerate(self.values):
@@ -100,16 +112,21 @@ class FloatParameter(ParametersBase):
     def copy(self):
         return self.__class__(self.value, min=self.min, max=self.max)
 
-    def to_dict(self):
-        return {"value": self.value, "min": self.min, "max": self.max}
+    def to_dict(self, with_meta=False):
+        d = {"value": self.value}
+        if with_meta:
+            d.update({"min": self.min, "max": self.max})
+        return d
 
     def from_dict(self, data):
         self.value = data["value"]
-        self.min = data["min"]
-        self.max = data["max"]
+        if "min" in data:
+            self.min = data["min"]
+        if "max" in data:
+            self.max = data["max"]
 
-    def to_bytes(self):
-        return self.float_to_bytes(self.value)
+    def to_bytes(self, precision=None):
+        return self.float_to_bytes(self.value, precision)
 
     def randomize(self, rnd, prob, amount):
         if rnd.uniform(0, 1) < prob:
@@ -132,7 +149,7 @@ class ParametersGroup(ParametersBase):
         return f"{self.__class__.__name__}({repr(self.parameters)}"
 
     def copy(self):
-        self.__class__(**{
+        return self.__class__(**{
             key: params.copy()
             for key, params in self.parameters.items()
         })
@@ -146,9 +163,9 @@ class ParametersGroup(ParametersBase):
             return self.parameters[item]
         return super().__getattribute__(item)
 
-    def to_dict(self):
+    def to_dict(self, with_meta=False):
         return {
-            key: params.to_dict()
+            key: params.to_dict(with_meta=with_meta)
             for key, params in self.parameters.items()
         }
 
@@ -159,9 +176,9 @@ class ParametersGroup(ParametersBase):
             else:
                 warnings.warn(f"Missing parameter '{key}'")
 
-    def to_bytes(self):
+    def to_bytes(self, precision=None):
         return b"".join(
-            self.parameters[key].to_bytes()
+            self.parameters[key].to_bytes(precision=precision)
             for key in sorted(self.parameters)
         )
 

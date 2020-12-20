@@ -16,6 +16,7 @@ from ..objects.constraints import FixedJoint, SpringJoint
 from ..agents.tentacle import Tentacle
 from ..objects.graphical import GraphicSettings
 from ..objects.container import ObjectContainer
+from ..objects.heightfield import Heightfield
 from ..image_gen import ImageGeneratorSettings
 from .rand import RandomXY
 
@@ -72,16 +73,23 @@ def initialize_map(engine: Engine):
     random_surroundings(engine, (-30, -20), (30, 20))
     engine.player.start_position = (0, 10)
 
-    engine.add_body(
-        Box((0, -30), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
-    )
+    if 0:
+        engine.add_body(
+            Box((0, -30), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
+        )
+    else:
+        engine.add_body(random_heightfield())
 
 
 def initialize_map_2(engine: Engine):
     engine.player.start_position = (-3, 5)
-    engine.add_body(
-        Box((0, -5), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
-    )
+    if 0:
+        engine.add_body(
+            Box((0, -5), (1000, 5), density=0, graphic_settings=GraphicSettings(draw_sprite=True, image_name="box1"))
+        )
+    else:
+        engine.add_body(random_heightfield())
+
     top_box = engine.add_body(
         Box((15, 15), (1, .5), density=0)
     )
@@ -253,3 +261,47 @@ def random_surroundings(container, top_left, bottom_right, noise_range=(0, .5), 
 
                 container.add_body(body)
 
+
+def uneven_floor_coordinates(
+        center_x, y, width,
+        spacing_min=.5, spacing_max=2,
+        amount=.3,
+        height=2.,
+        rnd=None,
+):
+    assert spacing_min > 0
+    assert spacing_max >= spacing_min
+    assert height > amount
+
+    rnd = rnd or random.Random()
+
+    x_start, x_end = center_x - width // 2, center_x + width // 2
+    x = x_start
+    coordinates = []
+    while x < x_end:
+        displacement = rnd.uniform(0., amount)
+        coordinates.append((x, y - displacement))
+        x += rnd.uniform(spacing_min, spacing_max)
+
+    coordinates += [
+        (x_end, y),
+        (x_end, y - height),
+        (x_start, y - height),
+    ]
+
+    return coordinates
+
+
+def random_heightfield(pos=(0, -2), extent=(60, 2), amount=0, num_samples=200, seed=23):
+    rnd = RandomXY(seed)
+
+    def _noise(t):
+        return rnd.noise(t * 200, 0)
+
+    return Heightfield(
+        position=pos,
+        extent=extent,
+        height_func=_noise,
+        amount=amount,
+        num_samples=num_samples,
+    )

@@ -8,9 +8,33 @@ from ..objects.primitives import Box, Circle, Ngon
 from ..objects.graphical import GraphicSettings
 from ..objects import constraints
 from ..keyhandler import KeyHandler
-from ..evo.polynomial import Polynomial, PolynomialPeriod
+from ..evo.polynomial import Polynomial, Periodic
 from ..evo.params import FloatParameter, FloatParameters, ParametersGroup
 
+
+class Motor:
+    def __init__(self, offset=None):
+        self.poly_x = Periodic(Polynomial(seq=[.1] * 6))
+        self.poly_y = Periodic(Polynomial(seq=[.1] * 6))
+        self.amplitude = Vec2d(1, 1)
+        self.offset = Vec2d(0, 0) if offset is None else Vec2d(offset)
+
+    def __call__(self, t):
+        return Vec2d(self.poly_x(t), self.poly_y(t)) * self.amplitude + self.offset
+
+    def get_evo_parameters(self):
+        return ParametersGroup(
+            poly_x=FloatParameters(self.poly_x.coefficients, min=-20, max=20),
+            poly_y=FloatParameters(self.poly_y.coefficients, min=-20, max=20),
+            amp=FloatParameters(self.amplitude, min=0.01, max=1.),
+            offset=FloatParameters(self.amplitude, min=0.01, max=1.),
+        )
+
+    def set_evo_parameters(self, params):
+        self.poly_x.coefficients = list(params.poly_x.values)
+        self.poly_y.coefficients = list(params.poly_y.values)
+        self.amplitude = Vec2d(params.amp.values)
+        self.offset = Vec2d(params.amp.values)
 
 class Player6(AgentBase):
     """Try to walk with evolutionary help"""
@@ -24,64 +48,54 @@ class Player6(AgentBase):
         self.jump_amount = 0.
         self.walk_sign = 1
         self.walking = False
+        self.walk_motor = Motor(offset=(0, .5))
         self.walk_speed_factor = .3
-        self.polynomials = {
-            "walk_x": PolynomialPeriod(
-                seq=[0.1] * 5, amplitude=1., offset=0.,
-                #seq=[0.08882834734403289, 1.0437225138008464, 0.1372975990571167, -1.1517058245854663, -1.3299943580854514], amplitude=0.5,
-                #seq=[0.8213138250878218, 0.3169560467905213, 0.5394817031352098, -2.4297660696376178, -1.01426872271315], amplitude=.5,
-                #seq=[0.848275819837695, 0.4225692758627822, 0.24071284860993988, -2.5062551638643997, -1.1058408159740925], amplitude=.5,
-                #seq=[0.43443431597450755, 0.1, 0.6543409985769876, -1.3512604515288842, -1.0949536260473556], amplitude=1.,
-                #seq=[0.7357286237574165, 0.8010924421839678, 2.003760840571829, 1.7379895383942698, 1.1614764404707159], amplitude=.1,
-                #seq=[-1.2674264815002598, 1.3659628202326013, -0.6229660620629052, 0.2536657026249989, 2.202557766145348], amplitude=.5,
-                #seq=[2.1870903370096197, -5.473204286047804, 5.604686414981392, 0.2443093967190033, 1.3374612075860475], amplitude=.5, offset=-1.,
-            ),
-            "walk_y": PolynomialPeriod(
-                seq=[0.1] * 5, amplitude=.1, offset=-.4,
-                #seq=[1.395439362585945, -1.7524559075070907, -1.27006177299697, 1.690270215932573, -0.9444440925711943], amplitude=.035,
-                #seq=[-0.7556301652401446, 2.017016348622996, -0.8110032220306115, 0.14614223527738057, -2.1957851977203733], amplitude=.33,
-                #seq=[-0.6699859363825067, 2.3693394418097204, -0.5513749784557014, 0.3170747097423691, -2.208134873159431], amplitude=.245,
-                #seq=[0.14765961278931786, 1.442002873452267, 0.14889152564506092, 0.256085880845646, -1.6046491682048876], amplitude=.5,
-                #seq=[-1.2274086889828242, 2.0857493488809267, 0.41104812733868057, 2.1882295616841416, 0.407664323133222], amplitude=.01,
-                #seq=[1.2841619127292327, 2.1770939164052607, 2.981937467567752, 4.349743705283853, 0.045200595667766574], amplitude=.5,
-                #seq=[-2.1382519479458937, 6.074638270631739, 9.695219330161098, 5.425918729808018, 4.340229696932189], amplitude=0.01, offset=-.2628,
-            ),
-        }
-        self.load_evo_parameters("best.json")
+        # self.___polynomials = {
+        #     "walk": {
+        #         "x": Polynomial(
+        #             seq=[0.1] * 5, amplitude=1., offset=0.,
+        #             #seq=[0.08882834734403289, 1.0437225138008464, 0.1372975990571167, -1.1517058245854663, -1.3299943580854514], amplitude=0.5,
+        #             #seq=[0.8213138250878218, 0.3169560467905213, 0.5394817031352098, -2.4297660696376178, -1.01426872271315], amplitude=.5,
+        #             #seq=[0.848275819837695, 0.4225692758627822, 0.24071284860993988, -2.5062551638643997, -1.1058408159740925], amplitude=.5,
+        #             #seq=[0.43443431597450755, 0.1, 0.6543409985769876, -1.3512604515288842, -1.0949536260473556], amplitude=1.,
+        #             #seq=[0.7357286237574165, 0.8010924421839678, 2.003760840571829, 1.7379895383942698, 1.1614764404707159], amplitude=.1,
+        #             #seq=[-1.2674264815002598, 1.3659628202326013, -0.6229660620629052, 0.2536657026249989, 2.202557766145348], amplitude=.5,
+        #             #seq=[2.1870903370096197, -5.473204286047804, 5.604686414981392, 0.2443093967190033, 1.3374612075860475], amplitude=.5, offset=-1.,
+        #         ),
+        #         "y": PolynomialPeriod(
+        #             seq=[0.1] * 5, amplitude=.1, offset=-.4,
+        #             #seq=[1.395439362585945, -1.7524559075070907, -1.27006177299697, 1.690270215932573, -0.9444440925711943], amplitude=.035,
+        #             #seq=[-0.7556301652401446, 2.017016348622996, -0.8110032220306115, 0.14614223527738057, -2.1957851977203733], amplitude=.33,
+        #             #seq=[-0.6699859363825067, 2.3693394418097204, -0.5513749784557014, 0.3170747097423691, -2.208134873159431], amplitude=.245,
+        #             #seq=[0.14765961278931786, 1.442002873452267, 0.14889152564506092, 0.256085880845646, -1.6046491682048876], amplitude=.5,
+        #             #seq=[-1.2274086889828242, 2.0857493488809267, 0.41104812733868057, 2.1882295616841416, 0.407664323133222], amplitude=.01,
+        #             #seq=[1.2841619127292327, 2.1770939164052607, 2.981937467567752, 4.349743705283853, 0.045200595667766574], amplitude=.5,
+        #             #seq=[-2.1382519479458937, 6.074638270631739, 9.695219330161098, 5.425918729808018, 4.340229696932189], amplitude=0.01, offset=-.2628,
+        #         ),
+        #     }
+        # }
+        # self.load_evo_parameters("best.json")
+
+        #import random
+        #params = self.get_evo_parameters()
+        #params.randomize(random.Random(), .5, .1)
+        #self.set_evo_parameters(params)
 
     def load_evo_parameters(self, filename):
         params = self.get_evo_parameters()
         params.load_json(filename)
+        # print("LOADED", filename, params)
         self.set_evo_parameters(params)
-
-    def randomize(self):
-        import random
-        for p in self.polynomials.values():
-            for i in range(len(p.parameters)):
-                p.parameters[i] = random.uniform(-.5, .5)
-            p.amplitude = random.uniform(.1, .5)
 
     def get_evo_parameters(self):
         return ParametersGroup(
-            **{
-                f"poly_{key}": ParametersGroup(
-                    poly=FloatParameters(poly.parameters),
-                    amp=FloatParameter(poly.amplitude, min=0.01, max=1.),
-                    #offset=FloatParameter(poly.offset, min=-1, max=1),
-                )
-                for key, poly in self.polynomials.items()
-            },
-            walk_speed=FloatParameter(self.walk_speed_factor, min=0., max=2.),
+            walk_motor=self.walk_motor.get_evo_parameters(),
+            walk_speed=FloatParameter(self.walk_speed_factor, min=0.1, max=2.),
         )
 
     def set_evo_parameters(self, parameters):
-        for key, params in parameters.parameters.items():
-            if key.startswith("poly_"):
-                poly = self.polynomials[key[5:]]
-                poly.parameters = params.poly.values
-                poly.amplitude = params.amp.value
-                #poly.offset = params.offset.value
         self.walk_speed_factor = parameters.walk_speed.value
+        self.walk_motor.set_evo_parameters(parameters.walk_motor)
 
     @property
     def position(self):
@@ -137,16 +151,10 @@ class Player6(AgentBase):
                 ))
             #self.engine.space.add_collision_handler()
 
-    def get_walk_sequence(self, t):
-        return Vec2d(
-            self.polynomials["walk_x"](t),
-            self.polynomials["walk_y"](t),
-        )
-
     def run_walk_sequence(self, dt):
         for c in filter(lambda c: c.has_user_data("ref_point"), self.constraints):
             ref_point = c.user_data["ref_point"]
-            seq_point = self.get_walk_sequence(self.sequence_index + c.user_data["offset"])
+            seq_point = self.walk_motor(self.sequence_index + c.user_data["offset"])
             c.distance = (seq_point - ref_point).get_length()
 
         self.jump_amount *= max(0, 1. - dt * 20)
@@ -175,8 +183,8 @@ class Player6(AgentBase):
 
     def jump(self, dt):
         #self.jump_amount = 1.
-        self.bodies[0].velocity += (0, 10)
-        
+        self.bodies[0].velocity += (0, 5)
+
     def dump_body(self, name, body):
         values = {
             key: _round(getattr(body._body, key))

@@ -1,7 +1,7 @@
 import math
 
 import pymunk
-from pymunk import Vec2d
+from pymunk import Vec2d, autogeometry
 
 import pyglet
 from pyglet import gl
